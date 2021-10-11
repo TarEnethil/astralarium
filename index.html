@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang=en>
+<head>
+    <meta charset=utf-8>
+    <title>Starchivar</title>
+    <link rel="stylesheet" type="text/css" href="main.css" />
+    <script src="fabric.min.js"></script>
+</head>
+<body>
+    <h1>Starchivar</h1>
+    <canvas id="star-map"></canvas>
+
+    <fieldset id="star-control">
+        <legend>Star Control</legend>
+        <input type="color" id="star-inner-color" />
+        <input type="color" id="star-border-color" />
+        <input type="range" min="2" max="5" id="star-size" />
+        <input type="button" id="star-add-line" value="+" />
+    </fieldset>
+
+    <script>
+        (function() {
+            var WIDTH = 800;
+            var HEIGHT = 600;
+            var PADDING = 20;
+            var STARS = 9;
+            var STARSIZES = [2, 3, 4];
+            var SZ_MAX = STARSIZES.length - 1;
+            rando = fabric.util.getRandomInt;
+            var gid = function(id) { return document.getElementById(id); };
+
+            var lastObject;
+            var insertMode = false;
+
+            gid("star-add-line").addEventListener("click", function(e) {
+                insertMode = true;
+            });
+
+            function onSelect(e) {
+                if (insertMode) {
+                    var line = makeLine(lastObject, e.target);
+                    canvas.add(line);
+                    canvas.sendToBack(line);
+                    canvas.renderAll();
+                    insertMode = false;
+                }
+
+                observe(e.target, "star-inner-color", "fill");
+                observe(e.target, "star-border-color", "stroke");
+                observeInt(e.target, "star-size", "radius");
+                lastObject = canvas.getActiveObject();
+                gid("star-control").style.display = "block";
+            }
+
+            function onDeselect(e) {
+                gid("star-control").style.display = "none";
+                unobserve("star-inner-color");
+                unobserve("star-border-color");
+                unobserve("star-size");
+            }
+
+            function updateLines(e) {
+                var el = e.transform.target;
+                var c = el.getCenterPoint();
+
+                el.lines_from.forEach(function(line) {
+                    line.set({ 'x1': c.x, 'y1': c.y });
+                });
+
+                el.lines_to.forEach(function(line) {
+                    line.set({ 'x2': c.x, 'y2': c.y });
+                });
+
+                canvas.renderAll();
+            }
+
+            function observe(elem, id, property) {
+                var el = document.getElementById(id);
+
+                el.value = elem[property];
+                el.oninput = function() {
+                    elem.set(property, this.value);
+                    canvas.renderAll();
+                }
+            }
+
+            function observeInt(elem, id, property) {
+                var el = document.getElementById(id);
+
+                el.value = elem[property];
+                el.oninput = function() {
+                    elem[property] = parseInt(this.value, 10);
+                    elem.dirty = true;
+                    elem.setCoords();
+                    canvas.renderAll();
+                }
+            }
+
+            function unobserve(id) {
+                document.getElementById(id).oninput = function(){};
+            }
+
+            function makeStar(left, top, size) {
+                var c = new fabric.Circle({
+                    left: left,
+                    top: top,
+                    strokeWidth: 2,
+                    radius: size,
+                    fill: '#ffffff',
+                    stroke: "#cccccc",
+                    hasControls: false
+                });
+
+                c.lines_from = [];
+                c.lines_to = [];
+
+                c.on({
+                    "selected": onSelect,
+                    "deselected": onDeselect,
+                    "moving": updateLines
+                });
+
+                return c;
+            }
+
+            function makeLine(from, to) {
+                var c1 = from.getCenterPoint();
+                var c2 = to.getCenterPoint();
+                var coords = [c1.x, c1.y, c2.x, c2.y];
+                var l = new fabric.Line(coords, {
+                    stroke: "#ffffff",
+                    strokeWidth: 1,
+                    selectable: false,
+                    evented: false
+                });
+
+                from.lines_from.push(l);
+                to.lines_to.push(l);
+
+                return l;
+            }
+
+            function makeRandomStar() {
+                return makeStar(rando(PADDING, WIDTH-PADDING), rando(PADDING, HEIGHT-PADDING), STARSIZES[rando(0, SZ_MAX)]);
+            }
+
+            var canvas = this.__canvas = new fabric.Canvas('star-map', {
+                width: WIDTH,
+                height: HEIGHT,
+                backgroundColor: '#000',
+                selection: false
+            });
+
+            for (var i = 0; i < STARS; i++) {
+                canvas.add(makeRandomStar());
+            }
+        })();
+    </script>
+</body>
+</html>
