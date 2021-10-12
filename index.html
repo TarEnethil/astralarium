@@ -8,15 +8,28 @@
 </head>
 <body>
     <h1>Astralarium</h1>
+
+    <ul>
+        <li>stars: <span id="counter-stars">0</span></li>
+        <li>lines: <span id="counter-lines">0</span></li>
+    </ul>
+
+    <fieldset>
+        <legend>Menu (<span id="mode"></span>)</legend>
+        <input type="button" id="mode-star-add" value="add" />
+        <input type="button" id="mode-star-edit" value="edit" />
+        <input type="button" id="mode-star-line" value="line" />
+        <input type="button" id="mode-star-delete" value="del" />
+    </fieldset>
+
     <canvas id="star-map"></canvas>
 
     <fieldset id="star-control">
         <legend>Star Control</legend>
-        <input type="textr" id="star-name" />
+        <input type="text" id="star-name" />
         <input type="color" id="star-inner-color" />
         <input type="color" id="star-border-color" />
-        <input type="range" min="2" max="5" id="star-size" />
-        <input type="button" id="star-add-line" value="+" />
+        <input type="range" min="2" max="20" id="star-size" />
     </fieldset>
 
     <fieldset id="save-load">
@@ -33,17 +46,33 @@
             var PADDING = 20;
             var STARS = 2;
             var STARSIZES = [20];
+            var STAR_DEFAULT_SIZE = 4;
             var SZ_MAX = STARSIZES.length - 1;
             rando = fabric.util.getRandomInt;
             var gid = function(id) { return document.getElementById(id); };
 
+            var stars = new Map();
             var lines = new Map();
 
-            var lastObject;
-            var insertMode = false;
+            var _lastObject;
+            var _pickingTo = false;
 
-            gid("star-add-line").addEventListener("click", function(e) {
-                insertMode = true;
+            var _mode;
+
+            gid("mode-star-add").addEventListener("click", function(e) {
+                enterAddMode();
+            });
+
+            gid("mode-star-edit").addEventListener("click", function(e) {
+                enterEditMode();
+            });
+
+            gid("mode-star-line").addEventListener("click", function(e) {
+                enterLineMode();
+            });
+
+            gid("mode-star-delete").addEventListener("click", function(e) {
+                enterDeleteMode();
             });
 
             gid("save").addEventListener("click", function(e) {
@@ -72,40 +101,212 @@
                 }
             });
 
+            function updateCounters() {
+                gid("counter-stars").innerHTML = stars.size;
+                gid("counter-lines").innerHTML = lines.size;
+            }
+
+            function setMode(mode) {
+                _mode = mode;
+                gid("mode").innerHTML = "mode: " + mode
+            }
+
+            function enterAddMode() {
+                if (_mode != "add") {
+                    setMode("add");
+                    gid("star-control").style.display = "block";
+
+                    stars.forEach(function(star) {
+                        star.selectable = false;
+                        star.off({
+                            "selected": onSelect,
+                            "deselected": onDeselect,
+                            "moving": onMove
+                        });
+                    });
+
+                    _pickingTo = false;
+                    _lastObject = null;
+
+                    canvas.discardActiveObject();
+                    canvas.on({
+                        "mouse:up" : makeStarFromEvent
+                    });
+
+                    canvas.requestRenderAll();
+                }
+            }
+
+            function enterEditMode() {
+                if (_mode != "edit") {
+                    setMode("edit");
+                    gid("star-control").style.display = "none";
+
+                    stars.forEach(function(star) {
+                        star.selectable = true;
+                        star.on({
+                            "selected": onSelect,
+                            "deselected": onDeselect,
+                            "moving": onMove
+                        });
+                        star.lockMovementX = false;
+                        star.lockMovementY = false;
+                    });
+
+                    _pickingTo = false;
+                    _lastObject = null;
+
+                    canvas.discardActiveObject();
+                    canvas.off({
+                        "mouse:up": makeStarFromEvent
+                    });
+
+                    canvas.requestRenderAll();
+                }
+            }
+
+            function enterLineMode() {
+                if (_mode != "line") {
+                    setMode("line");
+                    gid("star-control").style.display = "none";
+
+                    stars.forEach(function(star) {
+                        star.selectable = true;
+                        star.off({
+                            "selected": onSelect,
+                            "deselected": onDeselect,
+                            "moving": onMove
+                        });
+                        star.on({
+                            "selected": onSelect,
+                            "deselected": onDeselect
+                        });
+                        star.lockMovementX = true;
+                        star.lockMovementY = true;
+                    });
+
+                    _pickingTo = false;
+                    _lastObject = null;
+
+                    canvas.discardActiveObject();
+                    canvas.off({
+                        "mouse:up": makeStarFromEvent
+                    });
+
+                    canvas.requestRenderAll();
+                }
+            }
+
+            function enterDeleteMode() {
+                if (_mode != "del") {
+                    setMode("del");
+                    gid("star-control").style.display = "none";
+
+                    stars.forEach(function(star) {
+                        star.selectable = true;
+                        star.off({
+                            "selected": onSelect,
+                            "deselected": onDeselect,
+                            "moving": onMove
+                        });
+                        star.on({
+                            "selected": deleteStar,
+                        });
+                    });
+
+                    _pickingTo = false;
+                    _lastObject = null;
+
+                    canvas.discardActiveObject();
+                    canvas.off({
+                        "mouse:up": makeStarFromEvent
+                    });
+
+                    canvas.requestRenderAll();
+                }
+            }
+
             function uuidv4() {
               return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
                 (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
               );
             }
 
-
             function onSelect(e) {
-                if (insertMode) {
-                    var line = makeLine(lastObject, e.target);
-                    canvas.add(line);
-                    canvas.sendToBack(line);
-                    canvas.renderAll();
-                    insertMode = false;
+                if (_mode == "edit") {
+                    observe(e.target, "star-name", "name")
+                    observe(e.target, "star-inner-color", "fill");
+                    observe(e.target, "star-border-color", "stroke");
+                    observeInt(e.target, "star-size", "radius");
+                    gid("star-control").style.display = "block";
                 }
 
-                observe(e.target, "star-name", "name")
-                observe(e.target, "star-inner-color", "fill");
-                observe(e.target, "star-border-color", "stroke");
-                observeInt(e.target, "star-size", "radius");
-                lastObject = canvas.getActiveObject();
-                gid("star-control").style.display = "block";
+                if (_mode == "line") {
+                    if (_pickingTo) {
+                        var line = makeLine(_lastObject, e.target);
+                        canvas.add(line);
+                        canvas.sendToBack(line);
+                        canvas.renderAll();
+                        _lastObject = null;
+                        _pickingTo = false;
+                        canvas.discardActiveObject();
+                        canvas.requestRenderAll();
+                    } else {
+                        _pickingTo = true;
+                        _lastObject = canvas.getActiveObject();
+                    }
+                }
             }
 
             function onDeselect(e) {
-                gid("star-control").style.display = "none";
-                unobserve("star-name");
-                unobserve("star-inner-color");
-                unobserve("star-border-color");
-                unobserve("star-size");
+                if (_mode == "edit") {
+                    gid("star-control").style.display = "none";
+                    unobserve("star-name");
+                    unobserve("star-inner-color");
+                    unobserve("star-border-color");
+                    unobserve("star-size");
+                }
             }
 
             function onMove(e) {
                 updateLines(e.transform.target);
+            }
+
+            function deleteStar(e) {
+                var star = e.target;
+
+                // copy so that we can remove values while iterating
+                var lines_from_copy = star.lines_from.slice(0);
+                lines_from_copy.forEach(function(uuid) {
+                    var idx = star.lines_from.indexOf(uuid);
+                    star.lines_from.splice(idx, 1);
+
+                    var line = lines.get(uuid);
+                    idx = stars.get(line.to).lines_to.indexOf(uuid);
+                    stars.get(line.to).lines_to.splice(idx, 1);
+
+                    lines.delete(line.uuid);
+                    canvas.remove(line);
+                });
+
+                // copy so that we can remove values while iterating
+                var lines_to_copy = star.lines_to.slice(0);
+                lines_to_copy.forEach(function(uuid) {
+                    var idx = star.lines_to.indexOf(uuid);
+                    star.lines_to.splice(idx, 1);
+
+                    var line = lines.get(uuid);
+                    var idx = stars.get(line.from).lines_from.indexOf(uuid);
+                    stars.get(line.from).lines_from.splice(idx, 1);
+
+                    lines.delete(line.uuid);
+                    canvas.remove(line);
+                });
+
+                stars.delete(star.uuid);
+                canvas.remove(star);
+
+                updateCounters();
             }
 
             function updateLines(e) {
@@ -150,12 +351,7 @@
 
             function setupStar(star) {
                 star.hasControls = false;
-
-                star.on({
-                    "selected": onSelect,
-                    "deselected": onDeselect,
-                    "moving": onMove
-                });
+                star.selectable = false;
 
                 star.toObject = (function(toObject) {
                   return function() {
@@ -167,25 +363,34 @@
                     });
                   };
                 })(star.toObject);
+
+                stars.set(star.uuid, star);
             }
 
-            function makeStar(left, top, size) {
+            function makeStar(left, top, opts) {
+                var size = ("size" in opts ? opts.size : STAR_DEFAULT_SIZE);
+                var fill = ("fill" in opts ? opts.fill : "#ffffff");
+                var stroke = ("stroke" in opts ? opts.stroke : "#cccccc");
+                var name = ("name" in opts ? opts.name : "Unnamed star");
+
                 var star = new fabric.Circle({
                     left: left,
                     top: top,
                     strokeWidth: 2,
                     radius: size,
-                    fill: '#ffffff',
-                    stroke: "#cccccc"
+                    fill: fill,
+                    stroke: stroke
                 });
 
-                star.name = "Unnamed Star";
+                star.name = name;
                 star.uuid = uuidv4();
 
                 star.lines_from = [];
                 star.lines_to = [];
 
                 setupStar(star);
+
+                updateCounters();
 
                 return star;
             }
@@ -197,7 +402,9 @@
                 line.toObject = (function(toObject) {
                   return function() {
                     return fabric.util.object.extend(toObject.call(this), {
-                      uuid: this.uuid
+                      uuid: this.uuid,
+                      from: this.from,
+                      to: this.to
                     });
                   };
                 })(line.toObject);
@@ -216,16 +423,37 @@
 
                 line.uuid = uuidv4();
 
+                line.from = from.uuid;
+                line.to = to.uuid;
+
                 from.lines_from.push(line.uuid);
                 to.lines_to.push(line.uuid);
 
                 setupLine(line);
 
+                updateCounters();
+
                 return line;
             }
 
             function makeRandomStar() {
-                return makeStar(rando(PADDING, CANVAS_WIDTH-PADDING), rando(PADDING, CANVAS_HEIGHT-PADDING), STARSIZES[rando(0, SZ_MAX)]);
+                return makeStar(rando(PADDING, CANVAS_WIDTH-PADDING), rando(PADDING, CANVAS_HEIGHT-PADDING), { size: STARSIZES[rando(0, SZ_MAX)] });
+            }
+
+            function makeStarFromEvent(e) {
+                if (e.target == null || e.target == undefined) {
+                    var opts = {
+                        size: gid("star-size").value,
+                        fill: gid("star-inner-color").value,
+                        stroke: gid("star-border-color").value,
+                        name: gid("star-name").value
+                    };
+
+                    var x = e.absolutePointer.x - opts.size - 1;
+                    var y = e.absolutePointer.y - opts.size - 1;
+
+                    canvas.add(makeStar(x, y, opts));
+                }
             }
 
             var canvas = this.__canvas = new fabric.Canvas('star-map', {
@@ -238,6 +466,8 @@
             for (var i = 0; i < STARS; i++) {
                 canvas.add(makeRandomStar());
             }
+
+            enterAddMode();
         })();
     </script>
 </body>
