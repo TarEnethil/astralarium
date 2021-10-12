@@ -2,32 +2,42 @@
 <html lang=en>
 <head>
     <meta charset=utf-8>
-    <title>Starchivar</title>
+    <title>Astralarium</title>
     <link rel="stylesheet" type="text/css" href="main.css" />
     <script src="fabric.min.js"></script>
 </head>
 <body>
-    <h1>Starchivar</h1>
+    <h1>Astralarium</h1>
     <canvas id="star-map"></canvas>
 
     <fieldset id="star-control">
         <legend>Star Control</legend>
+        <input type="textr" id="star-name" />
         <input type="color" id="star-inner-color" />
         <input type="color" id="star-border-color" />
         <input type="range" min="2" max="5" id="star-size" />
         <input type="button" id="star-add-line" value="+" />
     </fieldset>
 
+    <fieldset id="save-load">
+        <legend>Save / Load</legend>
+        <textarea id="canvas-data"></textarea>
+        <input type="button" id="save" value="save" />
+        <input type="button" id="load" value="load" />
+    </fieldset>
+
     <script>
         (function() {
-            var WIDTH = 800;
-            var HEIGHT = 600;
+            var CANVAS_WIDTH = 800;
+            var CANVAS_HEIGHT = 600;
             var PADDING = 20;
-            var STARS = 9;
-            var STARSIZES = [2, 3, 4];
+            var STARS = 2;
+            var STARSIZES = [20];
             var SZ_MAX = STARSIZES.length - 1;
             rando = fabric.util.getRandomInt;
             var gid = function(id) { return document.getElementById(id); };
+
+            var lines = new Map();
 
             var lastObject;
             var insertMode = false;
@@ -35,6 +45,39 @@
             gid("star-add-line").addEventListener("click", function(e) {
                 insertMode = true;
             });
+
+            gid("save").addEventListener("click", function(e) {
+                gid("canvas-data").value = JSON.stringify(canvas);
+            });
+
+            gid("load").addEventListener("click", function(e) {
+                var data = gid("canvas-data").value;
+
+                lines = new Map();
+
+                if (data != undefined && data != '') {
+                    canvas.loadFromJSON(data);
+
+                    canvas.getObjects("line").forEach(function(line) {
+                        setupLine(line);
+                    });
+
+                    canvas.getObjects("circle").forEach(function(star) {
+                        setupStar(star);
+
+                        // for some reason, x{1,2} and y{1,2} are not correctly serialized
+                        // as a workaround, we update the line coordinates here
+                        updateLines(star);
+                    });
+                }
+            });
+
+            function uuidv4() {
+              return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+              );
+            }
+
 
             function onSelect(e) {
                 if (insertMode) {
@@ -45,6 +88,7 @@
                     insertMode = false;
                 }
 
+                observe(e.target, "star-name", "name")
                 observe(e.target, "star-inner-color", "fill");
                 observe(e.target, "star-border-color", "stroke");
                 observeInt(e.target, "star-size", "radius");
@@ -54,21 +98,25 @@
 
             function onDeselect(e) {
                 gid("star-control").style.display = "none";
+                unobserve("star-name");
                 unobserve("star-inner-color");
                 unobserve("star-border-color");
                 unobserve("star-size");
             }
 
-            function updateLines(e) {
-                var el = e.transform.target;
-                var c = el.getCenterPoint();
+            function onMove(e) {
+                updateLines(e.transform.target);
+            }
 
-                el.lines_from.forEach(function(line) {
-                    line.set({ 'x1': c.x, 'y1': c.y });
+            function updateLines(e) {
+                var c = e.getCenterPoint();
+
+                e.lines_from.forEach(function(uuid) {
+                    lines.get(uuid).set({ 'x1': c.x, 'y1': c.y });
                 });
 
-                el.lines_to.forEach(function(line) {
-                    line.set({ 'x2': c.x, 'y2': c.y });
+                e.lines_to.forEach(function(uuid) {
+                    lines.get(uuid).set({ 'x2': c.x, 'y2': c.y });
                 });
 
                 canvas.renderAll();
@@ -100,53 +148,89 @@
                 document.getElementById(id).oninput = function(){};
             }
 
+            function setupStar(star) {
+                star.hasControls = false;
+
+                star.on({
+                    "selected": onSelect,
+                    "deselected": onDeselect,
+                    "moving": onMove
+                });
+
+                star.toObject = (function(toObject) {
+                  return function() {
+                    return fabric.util.object.extend(toObject.call(this), {
+                      name: this.name,
+                      uuid: this.uuid,
+                      lines_from: this.lines_from,
+                      lines_to: this.lines_to
+                    });
+                  };
+                })(star.toObject);
+            }
+
             function makeStar(left, top, size) {
-                var c = new fabric.Circle({
+                var star = new fabric.Circle({
                     left: left,
                     top: top,
                     strokeWidth: 2,
                     radius: size,
                     fill: '#ffffff',
-                    stroke: "#cccccc",
-                    hasControls: false
+                    stroke: "#cccccc"
                 });
 
-                c.lines_from = [];
-                c.lines_to = [];
+                star.name = "Unnamed Star";
+                star.uuid = uuidv4();
 
-                c.on({
-                    "selected": onSelect,
-                    "deselected": onDeselect,
-                    "moving": updateLines
-                });
+                star.lines_from = [];
+                star.lines_to = [];
 
-                return c;
+                setupStar(star);
+
+                return star;
+            }
+
+            function setupLine(line) {
+                line.selectable = false;
+                line.evented = false;
+
+                line.toObject = (function(toObject) {
+                  return function() {
+                    return fabric.util.object.extend(toObject.call(this), {
+                      uuid: this.uuid
+                    });
+                  };
+                })(line.toObject);
+
+                lines.set(line.uuid, line);
             }
 
             function makeLine(from, to) {
                 var c1 = from.getCenterPoint();
                 var c2 = to.getCenterPoint();
                 var coords = [c1.x, c1.y, c2.x, c2.y];
-                var l = new fabric.Line(coords, {
+                var line = new fabric.Line(coords, {
                     stroke: "#ffffff",
-                    strokeWidth: 1,
-                    selectable: false,
-                    evented: false
+                    strokeWidth: 1
                 });
 
-                from.lines_from.push(l);
-                to.lines_to.push(l);
+                line.uuid = uuidv4();
 
-                return l;
+                from.lines_from.push(line.uuid);
+                to.lines_to.push(line.uuid);
+
+                setupLine(line);
+
+                return line;
             }
 
             function makeRandomStar() {
-                return makeStar(rando(PADDING, WIDTH-PADDING), rando(PADDING, HEIGHT-PADDING), STARSIZES[rando(0, SZ_MAX)]);
+                return makeStar(rando(PADDING, CANVAS_WIDTH-PADDING), rando(PADDING, CANVAS_HEIGHT-PADDING), STARSIZES[rando(0, SZ_MAX)]);
             }
 
             var canvas = this.__canvas = new fabric.Canvas('star-map', {
-                width: WIDTH,
-                height: HEIGHT,
+                width: CANVAS_WIDTH,
+                height: CANVAS_HEIGHT,
                 backgroundColor: '#000',
                 selection: false
             });
