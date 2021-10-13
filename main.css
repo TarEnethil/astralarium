@@ -1,16 +1,60 @@
-#star-map {
-    border: 1px solid #000000;
-    margin: 10px auto;
+@import 'pico.min.css';
+
+#star-control input {
+    margin-bottom: 0;
 }
 
-#star-control {
-    display: none;
-    border: 1px solid #000000;
-    margin: 20px;
-    width: 800px;
+nav input[type=text] {
+    width: 200px !important;
+    padding: 15px !important;
+}
+
+nav input[type=range] {
+    width: 100px !important;
+}
+
+nav input[type=color] {
+    height: 33px !important;
+}
+
+nav input {
+    width: 50px !important;
+    margin-bottom: none;
+    padding: 0px !important;
+    height: 20px !important;
 }
 
 #save-load {
+    display: none;
     width: 800px;
     margin: 20px;
+}
+
+.active-mode {
+    background-color: var(--primary-focus);
+}
+
+main#main {
+    padding: 0;
+}
+
+
+
+/* pico overrides */
+
+/* make pico tooltip appear on the bottom instead of at the top */
+[data-tooltip]::before, [data-tooltip]::after {
+    bottom: inherit !important;
+    top: 100%;
+}
+
+/* disable pico tooltip caret */
+[data-tooltip]::after {
+    border: none !important;
+}
+
+nav li[data-tooltip] {
+  border-bottom: none !important;
+  text-decoration: none;
+  cursor: inherit;
 }

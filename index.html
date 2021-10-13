@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang=en>
+<html data-theme="dark" lang=en>
 <head>
     <meta charset=utf-8>
     <title>Astralarium</title>
@@ -7,52 +7,80 @@
     <script src="fabric.min.js"></script>
 </head>
 <body>
-    <h1>Astralarium</h1>
+    <nav class="container-fluid">
+        <ul>
+            <li>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="19" height="19"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15.968l4.247 2.377-.949-4.773 3.573-3.305-4.833-.573L12 5.275v10.693zm0 2.292l-7.053 3.948 1.575-7.928L.587 8.792l8.027-.952L12 .5l3.386 7.34 8.027.952-5.935 5.488 1.575 7.928L12 18.26z"/></svg>
+                <strong>Astralarium</strong>
+            </li>
+        </ul>
+        <ul>
+            <li>
+                <a href="" id="mode-star-add" data-tooltip="Add a star by clicking">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/></svg>
+                </a>
+            </li>
+            <li>
+                <a href="" id="mode-star-edit" data-tooltip="Edit a star by clicking on it">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M15.728 9.686l-1.414-1.414L5 17.586V19h1.414l9.314-9.314zm1.414-1.414l1.414-1.414-1.414-1.414-1.414 1.414 1.414 1.414zM7.242 21H3v-4.243L16.435 3.322a1 1 0 0 1 1.414 0l2.829 2.829a1 1 0 0 1 0 1.414L7.243 21z"/></svg>
+                </a>
+            </li>
+            <li>
+                <a href="" id="mode-star-line" data-tooltip="Draw lines between stars">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M13.12 17.023l-4.199-2.29a4 4 0 1 1 0-5.465l4.2-2.29a4 4 0 1 1 .959 1.755l-4.2 2.29a4.008 4.008 0 0 1 0 1.954l4.199 2.29a4 4 0 1 1-.959 1.755zM6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm11-6a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+                </a>
+            </li>
+            <li>
+                <a href="" id="mode-star-delete" data-tooltip="Delete stars or lines by clicking">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M7 4V2h10v2h5v2h-2v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6H2V4h5zM6 6v14h12V6H6zm3 3h2v8H9V9zm4 0h2v8h-2V9z"/></svg>
+                </a>
+            </li>
+        </ul>
+        <ul id="star-control">
+            <li>
+                <input type="text" id="star-name" placeholder="Name" />
+            </li>
+            <li data-tooltip="Inner Color">
+                <input type="color" id="star-inner-color" value="#ffffff" />
+            </li>
+            <li data-tooltip="Outer Color">
+                <input type="color" id="star-border-color" value="#cccccc" />
+            </li>
+            <li>
+                <input type="range" min="2" max="20" id="star-size" />
+            </li>
+        </ul>
+        <ul>
+            <li>stars: <span id="counter-stars">0</span></li>
+            <li>lines: <span id="counter-lines">0</span></li>
+        </ul>
+    </nav>
 
-    <ul>
-        <li>stars: <span id="counter-stars">0</span></li>
-        <li>lines: <span id="counter-lines">0</span></li>
-    </ul>
+    <main class="container-fluid" id="main">
+        <canvas id="star-map"></canvas>
 
-    <fieldset>
-        <legend>Menu (<span id="mode"></span>)</legend>
-        <input type="button" id="mode-star-add" value="add" />
-        <input type="button" id="mode-star-edit" value="edit" />
-        <input type="button" id="mode-star-line" value="line" />
-        <input type="button" id="mode-star-delete" value="del" />
-    </fieldset>
-
-    <canvas id="star-map"></canvas>
-
-    <fieldset id="star-control">
-        <legend>Star Control</legend>
-        <input type="text" id="star-name" />
-        <input type="color" id="star-inner-color" />
-        <input type="color" id="star-border-color" />
-        <input type="range" min="2" max="20" id="star-size" />
-    </fieldset>
-
-    <fieldset id="save-load">
-        <legend>Save / Load</legend>
-        <textarea id="canvas-data"></textarea>
-        <input type="button" id="save" value="save" />
-        <input type="button" id="load" value="load" />
-    </fieldset>
+        <fieldset id="save-load">
+            <legend>Save / Load</legend>
+            <textarea id="canvas-data"></textarea>
+            <input type="button" id="save" value="save" />
+            <input type="button" id="load" value="load" />
+        </fieldset>
+    </main>
 
     <script>
         (function() {
-            var CANVAS_WIDTH = 800;
-            var CANVAS_HEIGHT = 600;
+            var gid = function(id) { return document.getElementById(id); };
+            var CANVAS_WIDTH = window.innerWidth;
+            var CANVAS_HEIGHT = window.innerHeight - 73;
             var PADDING = 20;
             var STARS = 2;
-            var STARSIZES = [20];
+            var STARSIZES = [1, 2, 3, 4];
             var STAR_DEFAULT_SIZE = 4;
             var SZ_MAX = STARSIZES.length - 1;
             rando = fabric.util.getRandomInt;
-            var gid = function(id) { return document.getElementById(id); };
 
-            var stars = new Map();
-            var lines = new Map();
+            var _stars = new Map();
+            var _lines = new Map();
 
             var _lastObject;
             var _pickingTo = false;
@@ -60,18 +88,26 @@
             var _mode;
 
             gid("mode-star-add").addEventListener("click", function(e) {
+                e.preventDefault();
+                document.activeElement.blur();
                 enterAddMode();
             });
 
             gid("mode-star-edit").addEventListener("click", function(e) {
+                e.preventDefault();
+                document.activeElement.blur();
                 enterEditMode();
             });
 
             gid("mode-star-line").addEventListener("click", function(e) {
+                e.preventDefault();
+                document.activeElement.blur();
                 enterLineMode();
             });
 
             gid("mode-star-delete").addEventListener("click", function(e) {
+                e.preventDefault();
+                document.activeElement.blur();
                 enterDeleteMode();
             });
 
@@ -82,7 +118,8 @@
             gid("load").addEventListener("click", function(e) {
                 var data = gid("canvas-data").value;
 
-                lines = new Map();
+                _stars = new Map();
+                _lines = new Map();
 
                 if (data != undefined && data != '') {
                     canvas.loadFromJSON(data);
@@ -102,33 +139,49 @@
             });
 
             function updateCounters() {
-                gid("counter-stars").innerHTML = stars.size;
-                gid("counter-lines").innerHTML = lines.size;
+                gid("counter-stars").innerHTML = _stars.size;
+                gid("counter-lines").innerHTML = _lines.size;
             }
 
             function setMode(mode) {
                 _mode = mode;
-                gid("mode").innerHTML = "mode: " + mode
+
+                gid("mode-star-add").classList.remove('active-mode');
+                gid("mode-star-edit").classList.remove('active-mode');
+                gid("mode-star-line").classList.remove('active-mode');
+                gid("mode-star-delete").classList.remove('active-mode');
+
+                gid("mode-star-" + mode).classList.add("active-mode");
             }
 
             function enterAddMode() {
                 if (_mode != "add") {
                     setMode("add");
-                    gid("star-control").style.display = "block";
+                    canvas.discardActiveObject();
 
-                    stars.forEach(function(star) {
+                    gid("star-control").style.visibility = "visible";
+
+                    _stars.forEach(function(star) {
                         star.selectable = false;
                         star.off({
                             "selected": onSelect,
+                            "selected": deleteStarEvent,
                             "deselected": onDeselect,
                             "moving": onMove
+                        });
+                    });
+
+                    _lines.forEach(function(line) {
+                        line.evented = false;
+                        line.selectable = false;
+                        line.off({
+                            "selected": deleteLineEvent
                         });
                     });
 
                     _pickingTo = false;
                     _lastObject = null;
 
-                    canvas.discardActiveObject();
                     canvas.on({
                         "mouse:up" : makeStarFromEvent
                     });
@@ -140,10 +193,15 @@
             function enterEditMode() {
                 if (_mode != "edit") {
                     setMode("edit");
-                    gid("star-control").style.display = "none";
+                    canvas.discardActiveObject();
 
-                    stars.forEach(function(star) {
+                    gid("star-control").style.visibility = "hidden";
+
+                    _stars.forEach(function(star) {
                         star.selectable = true;
+                        star.off({
+                            "selected": deleteStarEvent,
+                        });
                         star.on({
                             "selected": onSelect,
                             "deselected": onDeselect,
@@ -153,10 +211,17 @@
                         star.lockMovementY = false;
                     });
 
+                    _lines.forEach(function(line) {
+                        line.evented = false;
+                        line.selectable = false;
+                        line.off({
+                            "selected": deleteLineEvent
+                        });
+                    });
+
                     _pickingTo = false;
                     _lastObject = null;
 
-                    canvas.discardActiveObject();
                     canvas.off({
                         "mouse:up": makeStarFromEvent
                     });
@@ -168,12 +233,15 @@
             function enterLineMode() {
                 if (_mode != "line") {
                     setMode("line");
-                    gid("star-control").style.display = "none";
+                    canvas.discardActiveObject();
 
-                    stars.forEach(function(star) {
+                    gid("star-control").style.visibility = "hidden";
+
+                    _stars.forEach(function(star) {
                         star.selectable = true;
                         star.off({
                             "selected": onSelect,
+                            "selected": deleteStarEvent,
                             "deselected": onDeselect,
                             "moving": onMove
                         });
@@ -185,10 +253,17 @@
                         star.lockMovementY = true;
                     });
 
+                    _lines.forEach(function(line) {
+                        line.evented = false;
+                        line.selectable = false;
+                        line.off({
+                            "selected": deleteLineEvent
+                        });
+                    });
+
                     _pickingTo = false;
                     _lastObject = null;
 
-                    canvas.discardActiveObject();
                     canvas.off({
                         "mouse:up": makeStarFromEvent
                     });
@@ -198,11 +273,13 @@
             }
 
             function enterDeleteMode() {
-                if (_mode != "del") {
-                    setMode("del");
-                    gid("star-control").style.display = "none";
+                if (_mode != "delete") {
+                    setMode("delete");
+                    canvas.discardActiveObject();
 
-                    stars.forEach(function(star) {
+                    gid("star-control").style.visibility = "hidden";
+
+                    _stars.forEach(function(star) {
                         star.selectable = true;
                         star.off({
                             "selected": onSelect,
@@ -210,14 +287,21 @@
                             "moving": onMove
                         });
                         star.on({
-                            "selected": deleteStar,
+                            "selected": deleteStarEvent,
+                        });
+                    });
+
+                    _lines.forEach(function(line) {
+                        line.evented = true;
+                        line.selectable = true;
+                        line.on({
+                            "selected": deleteLineEvent
                         });
                     });
 
                     _pickingTo = false;
                     _lastObject = null;
 
-                    canvas.discardActiveObject();
                     canvas.off({
                         "mouse:up": makeStarFromEvent
                     });
@@ -238,7 +322,7 @@
                     observe(e.target, "star-inner-color", "fill");
                     observe(e.target, "star-border-color", "stroke");
                     observeInt(e.target, "star-size", "radius");
-                    gid("star-control").style.display = "block";
+                    gid("star-control").style.visibility = "visible";
                 }
 
                 if (_mode == "line") {
@@ -259,65 +343,65 @@
             }
 
             function onDeselect(e) {
-                if (_mode == "edit") {
-                    gid("star-control").style.display = "none";
-                    unobserve("star-name");
-                    unobserve("star-inner-color");
-                    unobserve("star-border-color");
-                    unobserve("star-size");
-                }
+                gid("star-control").style.visibility = "hidden";
+                unobserve("star-name");
+                unobserve("star-inner-color");
+                unobserve("star-border-color");
+                unobserve("star-size");
             }
 
             function onMove(e) {
                 updateLines(e.transform.target);
             }
 
-            function deleteStar(e) {
+            function deleteStarEvent(e) {
                 var star = e.target;
 
                 // copy so that we can remove values while iterating
                 var lines_from_copy = star.lines_from.slice(0);
                 lines_from_copy.forEach(function(uuid) {
-                    var idx = star.lines_from.indexOf(uuid);
-                    star.lines_from.splice(idx, 1);
-
-                    var line = lines.get(uuid);
-                    idx = stars.get(line.to).lines_to.indexOf(uuid);
-                    stars.get(line.to).lines_to.splice(idx, 1);
-
-                    lines.delete(line.uuid);
-                    canvas.remove(line);
+                    deleteLine(uuid);
                 });
 
                 // copy so that we can remove values while iterating
                 var lines_to_copy = star.lines_to.slice(0);
                 lines_to_copy.forEach(function(uuid) {
-                    var idx = star.lines_to.indexOf(uuid);
-                    star.lines_to.splice(idx, 1);
-
-                    var line = lines.get(uuid);
-                    var idx = stars.get(line.from).lines_from.indexOf(uuid);
-                    stars.get(line.from).lines_from.splice(idx, 1);
-
-                    lines.delete(line.uuid);
-                    canvas.remove(line);
+                    deleteLine(uuid);
                 });
 
-                stars.delete(star.uuid);
+                _stars.delete(star.uuid);
                 canvas.remove(star);
 
                 updateCounters();
+            }
+
+            function deleteLineEvent(e) {
+                deleteLine(e.target.uuid);
+                updateCounters();
+            }
+
+            function deleteLine(uuid) {
+                var line = _lines.get(uuid);
+
+                var idx = _stars.get(line.from).lines_from.indexOf(uuid);
+                _stars.get(line.from).lines_from.splice(idx, 1);
+
+                idx = _stars.get(line.to).lines_to.indexOf(uuid);
+                _stars.get(line.to).lines_to.splice(idx, 1);
+
+                _lines.delete(line.uuid);
+                canvas.remove(line);
             }
 
             function updateLines(e) {
                 var c = e.getCenterPoint();
 
                 e.lines_from.forEach(function(uuid) {
-                    lines.get(uuid).set({ 'x1': c.x, 'y1': c.y });
+                    _lines.get(uuid).set({ 'x1': c.x, 'y1': c.y });
                 });
 
                 e.lines_to.forEach(function(uuid) {
-                    lines.get(uuid).set({ 'x2': c.x, 'y2': c.y });
+                    _lines.get(uuid).set({ 'x2': c.x, 'y2': c.y });
                 });
 
                 canvas.renderAll();
@@ -364,7 +448,7 @@
                   };
                 })(star.toObject);
 
-                stars.set(star.uuid, star);
+                _stars.set(star.uuid, star);
             }
 
             function makeStar(left, top, opts) {
@@ -409,7 +493,7 @@
                   };
                 })(line.toObject);
 
-                lines.set(line.uuid, line);
+                _lines.set(line.uuid, line);
             }
 
             function makeLine(from, to) {
