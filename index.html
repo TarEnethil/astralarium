@@ -7,7 +7,7 @@
     <script src="fabric.min.js"></script>
 </head>
 <body>
-    <nav class="container-fluid">
+    <nav class="container-fluid" id="nav">
         <ul>
             <li>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="19" height="19"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15.968l4.247 2.377-.949-4.773 3.573-3.305-4.833-.573L12 5.275v10.693zm0 2.292l-7.053 3.948 1.575-7.928L.587 8.792l8.027-.952L12 .5l3.386 7.34 8.027.952-5.935 5.488 1.575 7.928L12 18.26z"/></svg>
@@ -46,7 +46,7 @@
             <li data-tooltip="Outer Color">
                 <input type="color" id="star-border-color" value="#cccccc" />
             </li>
-            <li>
+            <li data-tooltip="Size">
                 <input type="range" min="2" max="20" id="star-size" />
             </li>
         </ul>
@@ -71,7 +71,7 @@
         (function() {
             var gid = function(id) { return document.getElementById(id); };
             var CANVAS_WIDTH = window.innerWidth;
-            var CANVAS_HEIGHT = window.innerHeight - 73;
+            var CANVAS_HEIGHT = window.innerHeight - gid("nav").clientHeight;
             var PADDING = 20;
             var STARS = 2;
             var STARSIZES = [1, 2, 3, 4];
@@ -413,6 +413,7 @@
                 el.value = elem[property];
                 el.oninput = function() {
                     elem.set(property, this.value);
+                    elem.setCoords();
                     canvas.renderAll();
                 }
             }
@@ -422,8 +423,7 @@
 
                 el.value = elem[property];
                 el.oninput = function() {
-                    elem[property] = parseInt(this.value, 10);
-                    elem.dirty = true;
+                    elem.set(property, parseInt(this.value, 10));
                     elem.setCoords();
                     canvas.renderAll();
                 }
@@ -543,7 +543,7 @@
             var canvas = this.__canvas = new fabric.Canvas('star-map', {
                 width: CANVAS_WIDTH,
                 height: CANVAS_HEIGHT,
-                backgroundColor: '#000',
+                backgroundColor: '#000000',
                 selection: false
             });
 
