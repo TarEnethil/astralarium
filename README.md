@@ -18,8 +18,8 @@ How does something like this not exist yet?
 
 # References
 * CSS: [pico.css](https://picocss.com/)
-* Canvas-Library: [fabricjs](http://fabricjs.com)
-* Icons: [remixion](https://remixicon.com/)
+* Canvas-Library: [fabric.js](http://fabricjs.com)
+* Icons: [remixicon](https://remixicon.com/)
 
 ## Premade Backgrounds
 * Cluster of Stars: [Photo by Kai Pilger from Pexels](https://www.pexels.com/photo/cluster-of-stars-1341279/)
