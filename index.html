@@ -17,7 +17,7 @@
         </ul>
         <ul>
             <li>
-                <a href="" id="button-new" data-tooltip="New or Load Map">
+                <a href="" id="button-canvas" data-tooltip="New or Load Map">
                     <!-- remixicon "ri-file-2-line" -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M3 8l6.003-6h10.995C20.55 2 21 2.455 21 2.992v18.016a.993.993 0 0 1-.993.992H3.993A1 1 0 0 1 3 20.993V8zm7-4v5H5v11h14V4h-9z"/></svg>
                 </a>
@@ -89,11 +89,54 @@
     <main class="container-fluid" id="main">
         <canvas id="star-map"></canvas>
 
+        <article id="popup-canvas" class="popup">
+            <header>
+                New or Load Canvas
+
+                <a href="" id="close-canvas-popup" class="close-button">
+                    <!-- remixicon "ri-close-circle-line" -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
+                </a>
+            </header>
+
+            <details open>
+                <summary>New Canvas</summary>
+                TODO
+            </details>
+
+            <details>
+                <summary>Load Canvas</summary>
+                TODO
+            </details>
+        </article>
+
+        <article id="popup-save" class="popup">
+            <header>
+                Export or Save Canvas
+
+                <a href="" id="close-save-popup" class="close-button">
+                    <!-- remixicon "ri-close-circle-line" -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
+                </a>
+            </header>
+
+            <details open>
+                <summary>Export Canvas</summary>
+                TODO
+            </details>
+
+            <details>
+                <summary>Save Canvas</summary>
+                TODO
+            </details>
+        </article>
+
         <article id="popup-background" class="popup">
             <header>
                 Choose a Background Image
 
                 <a href="" id="close-background-popup" class="close-button">
+                    <!-- remixicon "ri-close-circle-line" -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
                 </a>
             </header>
@@ -158,35 +201,69 @@
 
             var _mode;
 
-            gid("mode-star-add").addEventListener("click", function(e) {
+            gid("mode-star-add").addEventListener("click", e => {
                 e.preventDefault();
                 document.activeElement.blur();
                 enterAddMode();
             });
 
-            gid("mode-star-edit").addEventListener("click", function(e) {
+            gid("mode-star-edit").addEventListener("click", e => {
                 e.preventDefault();
                 document.activeElement.blur();
                 enterEditMode();
             });
 
-            gid("mode-star-line").addEventListener("click", function(e) {
+            gid("mode-star-line").addEventListener("click", e => {
                 e.preventDefault();
                 document.activeElement.blur();
                 enterLineMode();
             });
 
-            gid("mode-star-delete").addEventListener("click", function(e) {
+            gid("mode-star-delete").addEventListener("click", e => {
                 e.preventDefault();
                 document.activeElement.blur();
                 enterDeleteMode();
             });
 
-            gid("button-background").addEventListener("click", function(e) {
-                e.preventDefault();
+            function closePopup(id) {
+                gid("popup-" + id).style.display = "none";
+            }
+
+            function openPopup(id) {
                 resetMode();
-                gid("popup-background").style.display = "block";
+
+                closePopup("canvas");
+                closePopup("save");
+                closePopup("background");
+
+                gid("popup-" + id).style.display = "block";
+
                 document.activeElement.blur();
+            }
+
+            gid("button-canvas").addEventListener("click", e => {
+                e.preventDefault();
+                openPopup("canvas");
+            });
+
+            gid("close-canvas-popup").addEventListener("click", e => {
+                e.preventDefault();
+                closePopup("canvas");
+            });
+
+            gid("button-save").addEventListener("click", e => {
+                e.preventDefault();
+                openPopup("save");
+            });
+
+            gid("close-save-popup").addEventListener("click", e => {
+                e.preventDefault();
+                closePopup("save");
+            });
+
+            gid("button-background").addEventListener("click", e => {
+                e.preventDefault();
+                openPopup("background");
             });
 
             gid("button-delete-background").addEventListener("click", e => {
@@ -199,10 +276,10 @@
 
             gid("close-background-popup").addEventListener("click", e => {
                 e.preventDefault();
-                gid("popup-background").style.display = "none";
+                closePopup("background");
             });
 
-            gid("button-url-background").addEventListener("click", function(e) {
+            gid("button-url-background").addEventListener("click", e => {
                 var v = gid("background-url").value;
 
                 if (v && v != "") {
@@ -218,11 +295,11 @@
                 });
             }
 
-            gid("save").addEventListener("click", function(e) {
+            gid("save").addEventListener("click", e => {
                 gid("canvas-data").value = JSON.stringify(canvas);
             });
 
-            gid("load").addEventListener("click", function(e) {
+            gid("load").addEventListener("click", e => {
                 var data = gid("canvas-data").value;
 
                 _stars = new Map();
@@ -231,11 +308,11 @@
                 if (data != undefined && data != '') {
                     canvas.loadFromJSON(data);
 
-                    canvas.getObjects("line").forEach(function(line) {
+                    canvas.getObjects("line").forEach(line => {
                         setupLine(line);
                     });
 
-                    canvas.getObjects("circle").forEach(function(star) {
+                    canvas.getObjects("circle").forEach(star => {
                         setupStar(star);
 
                         // for some reason, x{1,2} and y{1,2} are not correctly serialized
@@ -282,7 +359,7 @@
 
                 gid("star-control").style.visibility = "hidden";
 
-                _stars.forEach(function(star) {
+                _stars.forEach(star => {
                     star.selectable = false;
                     star.off({
                         "selected": onSelect,
@@ -297,7 +374,7 @@
                     star.lockMovementY = false;
                 });
 
-                _lines.forEach(function(line) {
+                _lines.forEach(line => {
                     line.evented = false;
                     line.selectable = false;
                     line.off({
@@ -338,7 +415,7 @@
                     resetMode();
                     setMode("edit");
 
-                    _stars.forEach(function(star) {
+                    _stars.forEach(star => {
                         star.selectable = true;
                         star.on({
                             "selected": onSelect,
@@ -356,7 +433,7 @@
                     resetMode();
                     setMode("line");
 
-                    _stars.forEach(function(star) {
+                    _stars.forEach(star => {
                         star.selectable = true;
                         star.on({
                             "selected": onSelect,
@@ -375,14 +452,14 @@
                     resetMode();
                     setMode("delete");
 
-                    _stars.forEach(function(star) {
+                    _stars.forEach(star => {
                         star.selectable = true;
                         star.on({
                             "selected": deleteStarEvent,
                         });
                     });
 
-                    _lines.forEach(function(line) {
+                    _lines.forEach(line => {
                         line.evented = true;
                         line.selectable = true;
                         line.on({
@@ -410,9 +487,7 @@
                 }
 
                 if (_mode == "line") {
-                    console.log("on select: LINE");
                     if (_pickingTo) {
-                        console.log("picking to");
                         var line = makeLine(_lastObject, e.target);
                         canvas.add(line);
                         canvas.sendToBack(line);
@@ -446,13 +521,13 @@
 
                 // copy so that we can remove values while iterating
                 var lines_from_copy = star.lines_from.slice(0);
-                lines_from_copy.forEach(function(uuid) {
+                lines_from_copy.forEach(uuid => {
                     deleteLine(uuid);
                 });
 
                 // copy so that we can remove values while iterating
                 var lines_to_copy = star.lines_to.slice(0);
-                lines_to_copy.forEach(function(uuid) {
+                lines_to_copy.forEach(uuid => {
                     deleteLine(uuid);
                 });
 
@@ -483,11 +558,11 @@
             function updateLines(e) {
                 var c = e.getCenterPoint();
 
-                e.lines_from.forEach(function(uuid) {
+                e.lines_from.forEach(uuid => {
                     _lines.get(uuid).set({ 'x1': c.x, 'y1': c.y });
                 });
 
-                e.lines_to.forEach(function(uuid) {
+                e.lines_to.forEach(uuid => {
                     _lines.get(uuid).set({ 'x2': c.x, 'y2': c.y });
                 });
 
