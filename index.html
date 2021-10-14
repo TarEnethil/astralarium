@@ -122,12 +122,15 @@
 
             <details open>
                 <summary>Export Canvas</summary>
-                TODO
+
+                <button id="export-png">Export as PNG</button>
+                <button id="export-svg">Export as SVG (experimental)</button>
             </details>
 
-            <details>
+            <details open>
                 <summary>Save Canvas</summary>
-                TODO
+
+                <button id="export-json" data-tooltip="Can (maybe) be loaded later">Save as JSON (experimental)</button>
             </details>
         </article>
 
@@ -246,6 +249,48 @@
                 openPopup("canvas");
             });
 
+            function triggerDownload(name, url) {
+                var link = document.createElement('a');
+                link.download = name;
+                link.href = url;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            gid("export-png").addEventListener("click", e => {
+                var dataURL = canvas.toDataURL({
+                     width: canvas.width,
+                     height: canvas.height,
+                     left: 0,
+                     top: 0,
+                     format: 'png'
+                });
+
+                triggerDownload("image.png", dataURL);
+            });
+
+            gid("export-svg").addEventListener("click", e => {
+                var dataURL = canvas.toSVG({
+                     width: canvas.width,
+                     height: canvas.height
+                });
+
+                var blob = new Blob([dataURL], {type: "image/svg+xml;charset=utf-8"});
+                var localURL = URL.createObjectURL(blob);
+
+                triggerDownload("image.svg", localURL);
+            });
+
+            gid("export-json").addEventListener("click", e => {
+                var data =  JSON.stringify(canvas);
+
+                var blob = new Blob([data], {type: "application/json;charset=utf-8"});
+                var localURL = URL.createObjectURL(blob);
+
+                triggerDownload("stars.json", localURL);
+            });
+
             gid("close-canvas-popup").addEventListener("click", e => {
                 e.preventDefault();
                 closePopup("canvas");
@@ -333,7 +378,8 @@
                 fabric.Image.fromURL(url, imgObj => {
                     var opts = { opacity: 1,
                                  originX: 'left',
-                                 originY: 'top' };
+                                 originY: 'top',
+                                 crossOrigin: true };
 
                     if (gid("background-stretch").checked) {
                         opts.scaleX = canvas.width / imgObj.width;
@@ -344,7 +390,7 @@
 
                     b.removeAttribute("aria-busy");
                     gid("popup-background").style.display = "none";
-                });
+                }, { crossOrigin: true });
             }
 
             function resetMode() {
@@ -497,7 +543,6 @@
                         canvas.discardActiveObject();
                         canvas.requestRenderAll();
                     } else {
-                        console.log("not picking to");
                         _pickingTo = true;
                         _lastObject = canvas.getActiveObject();
                     }
