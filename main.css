@@ -38,6 +38,42 @@ main#main {
     padding: 0;
 }
 
+.popup {
+    display: none;
+    position: absolute;
+    top: 25px;
+    width:  500px;
+    left: 50%;
+    margin-left: -250px;
+    padding-bottom: 0.5em;
+}
+
+.popup header {
+    padding-top: 0.5rem;
+    padding-bottom:  0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.popup div {
+    margin-bottom: var(--spacing);
+}
+
+.popup .inline-form {
+    display: inline-block;
+}
+
+.popup .close-button {
+    float: right;
+}
+
+.background-gallery-image {
+    border: 3px solid var(--background-color);
+}
+
+.background-gallery-image:hover {
+    cursor: pointer;
+    border-color: var(--primary-hover);
+}
 
 /* pico overrides */
 
@@ -52,7 +88,8 @@ main#main {
     border: none !important;
 }
 
-nav li[data-tooltip] {
+nav li[data-tooltip],
+.popup div[data-tooltip] {
   border-bottom: none !important;
   text-decoration: none;
   cursor: inherit;
