@@ -106,7 +106,8 @@
 
             <details>
                 <summary>Load Canvas</summary>
-                TODO
+                <textarea id="canvas-load-data" placeholder="JSON Data"></textarea>
+                <button id="load-canvas-from-data">Load Canvas</button>
             </details>
         </article>
 
@@ -249,6 +250,35 @@
                 openPopup("canvas");
             });
 
+            gid("load-canvas-from-data").addEventListener("click", e => {
+                gid("load-canvas-from-data").setAttribute("aria-busy", true);
+
+                var data = gid("canvas-load-data").value;
+
+                _stars = new Map();
+                _lines = new Map();
+
+                if (data != undefined && data != '') {
+                    canvas.loadFromJSON(data);
+
+                    canvas.getObjects("line").forEach(line => {
+                        setupLine(line);
+                    });
+
+                    canvas.getObjects("circle").forEach(star => {
+                        setupStar(star);
+
+                        // for some reason, x{1,2} and y{1,2} are not correctly serialized
+                        // as a workaround, we update the line coordinates here
+                        updateLines(star);
+                    });
+
+                    gid("load-canvas-from-data").removeAttribute("aria-busy");
+                    closePopup("canvas");
+                    updateCounters();
+                }
+            });
+
             function triggerDownload(name, url) {
                 var link = document.createElement('a');
                 link.download = name;
@@ -316,7 +346,7 @@
 
                 canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
 
-                gid("popup-background").style.display = "none";
+                closePopup("background");
             });
 
             gid("close-background-popup").addEventListener("click", e => {
@@ -339,33 +369,6 @@
                     loadBackground(url, "premade-background-spinner");
                 });
             }
-
-            gid("save").addEventListener("click", e => {
-                gid("canvas-data").value = JSON.stringify(canvas);
-            });
-
-            gid("load").addEventListener("click", e => {
-                var data = gid("canvas-data").value;
-
-                _stars = new Map();
-                _lines = new Map();
-
-                if (data != undefined && data != '') {
-                    canvas.loadFromJSON(data);
-
-                    canvas.getObjects("line").forEach(line => {
-                        setupLine(line);
-                    });
-
-                    canvas.getObjects("circle").forEach(star => {
-                        setupStar(star);
-
-                        // for some reason, x{1,2} and y{1,2} are not correctly serialized
-                        // as a workaround, we update the line coordinates here
-                        updateLines(star);
-                    });
-                }
-            });
 
             function updateCounters() {
                 gid("brand").setAttribute("data-tooltip", _stars.size + " Stars, " + _lines.size + " Lines");

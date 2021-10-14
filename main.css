@@ -54,6 +54,10 @@ main#main {
     margin-bottom: 0.5rem;
 }
 
+.popup footer {
+    margin-top: 0.5rem;
+}
+
 .popup footer button {
     margin-bottom: 0;
 }
