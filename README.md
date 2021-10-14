@@ -13,6 +13,7 @@ How does something like this not exist yet?
     - export to png (svg too?)
 * constellation tracking (basically connected graphs)
     - fabric groups?
+* Add Text-Tool?
 
 # References
 * CSS: [pico.css](https://picocss.com/)
