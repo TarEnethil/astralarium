@@ -48,10 +48,14 @@ main#main {
     padding-bottom: 0.5em;
 }
 
-.popup header {
+.popup header, .popup footer {
     padding-top: 0.5rem;
     padding-bottom:  0.5rem;
     margin-bottom: 0.5rem;
+}
+
+.popup footer button {
+    margin-bottom: 0;
 }
 
 .popup div {

@@ -122,6 +122,10 @@
 
                 <button id="button-premade-background">Choose Image</button>
             </details>
+
+            <footer>
+                <button id="button-delete-background" class="contrast">Delete Background</button>
+            </footer>
         </article>
 
         <fieldset id="save-load">
@@ -181,6 +185,14 @@
                 resetMode();
                 gid("popup-background").style.display = "block";
                 document.activeElement.blur();
+            });
+
+            gid("button-delete-background").addEventListener("click", e => {
+                e.preventDefault();
+
+                canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+
+                gid("popup-background").style.display = "none";
             });
 
             gid("close-background-popup").addEventListener("click", e => {
