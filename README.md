@@ -9,13 +9,17 @@ How does something like this not exist yet?
 * settings
     - new starmap wizard (number of stars, sizes, colors)
     - save / load dialogue
-    - background image for canvas
     - export to png (svg too?)
+    - more premade backgrounds
 * constellation tracking (basically connected graphs)
     - fabric groups?
 * Add Text-Tool?
+* Hotkeys
 
 # References
 * CSS: [pico.css](https://picocss.com/)
 * Canvas-Library: [fabricjs](http://fabricjs.com)
 * Icons: [remixion](https://remixicon.com/)
+
+## Premade Backgrounds
+* Cluster of Stars: [Photo by Kai Pilger from Pexels](https://www.pexels.com/photo/cluster-of-stars-1341279/)

@@ -116,8 +116,8 @@
                 <summary>Premade (stretch recommended)</summary>
 
                 <div class="grid">
-                    <img src="https://images.alphacoders.com/947/947551.jpg" class="background-gallery-image" />
-                    <img src="https://images.alphacoders.com/947/947551.jpg" class="background-gallery-image" />
+                    <img src="https://tarenethil.github.io/astralarium/img/thumb/pexels-kai.jpg" class="background-gallery-image" />
+                    <img src="https://tarenethil.github.io/astralarium/img/thumb/pexels-kai.jpg" class="background-gallery-image" />
                 </div>
 
                 <button id="button-premade-background">Choose Image</button>
@@ -198,8 +198,9 @@
 
             var images = document.getElementsByClassName("background-gallery-image");
             for (var i = 0; i < images.length; i++) {
+                var url = images[i].src.replace(/\/thumb/, "");
                 images[i].addEventListener("click", e => {
-                    loadBackground(images[i].src, "button-premade-background");
+                    loadBackground(url, "button-premade-background");
                 });
             }
 
