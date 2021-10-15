@@ -101,7 +101,46 @@
 
             <details open>
                 <summary>New Canvas</summary>
-                TODO
+
+                <label for="new-num-stars">
+                    Number of Stars (<span id="new-num-stars-label"></span>)
+                    <input type="range" min="1" max="1000" value="150" id="new-num-stars" name="new-num-stars" />
+                </label>
+
+                <div class="grid">
+                    <label for="new-min-size">
+                        Min Size
+                        <input type="number" value="2" id="new-min-size" name="new-min-size" />
+                    </label>
+
+                    <label for="new-max-size">
+                        Max Size
+                        <input type="number" value="7" id="new-max-size" name="new-max-size" />
+                    </label>
+                </div>
+
+                <div class="grid">
+                    <label for="new-inner-color">
+                        Inner Color
+                        <input type="color" id="new-inner-color" value="#ffffff" />
+                    </label>
+
+                    <label for="new-outer-color">
+                        Outer Color
+                        <input type="color" id="new-outer-color" value="#cccccc" />
+                    </label>
+                </div>
+
+                <div class="grid">
+                    <button id="new-canvas-create" data-tooltip="Create new Canvas with these settings">New Canvas</button>
+                    <button id="new-canvas-add" data-tooltip="Add stars to existing canvas">Add to Canvas</button>
+                </div>
+
+                <button id="new-canvas-delete" class="secondary">
+                    <!-- remixicon "ri-delete-bin-6-line" -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M7 4V2h10v2h5v2h-2v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6H2V4h5zM6 6v14h12V6H6zm3 3h2v8H9V9zm4 0h2v8h-2V9z"/></svg>
+                    Clear Canvas
+                </button>
             </details>
 
             <details>
@@ -191,10 +230,8 @@
             var CANVAS_WIDTH = window.innerWidth;
             var CANVAS_HEIGHT = window.innerHeight - gid("nav").clientHeight;
             var PADDING = 20;
-            var STARS = 2;
-            var STARSIZES = [1, 2, 3, 4];
             var STAR_DEFAULT_SIZE = 4;
-            var SZ_MAX = STARSIZES.length - 1;
+
             rando = fabric.util.getRandomInt;
 
             var _stars = new Map();
@@ -248,6 +285,55 @@
             gid("button-canvas").addEventListener("click", e => {
                 e.preventDefault();
                 openPopup("canvas");
+            });
+
+            gid("new-num-stars-label").innerHTML = gid("new-num-stars").value;
+            gid("new-num-stars").oninput = () => {
+                gid("new-num-stars-label").innerHTML = gid("new-num-stars").value;
+            };
+
+            function clearCanvas() {
+                canvas.clear();
+                canvas.backgroundColor = "#000000";
+                _stars = new Map();
+                _lines = new Map();
+            }
+
+            function addStarsToCanvas(newCanvas) {
+                gid("new-canvas-create").setAttribute("aria-busy", true);
+
+                if (newCanvas) {
+                    clearCanvas();
+                }
+
+                for (var i = 0; i < gid("new-num-stars").value; i++) {
+                    canvas.add(makeRandomStar());
+                }
+
+                updateCounters();
+                gid("new-canvas-create").removeAttribute("aria-busy");
+
+                if (newCanvas) {
+                    closePopup("canvas");
+                }
+            }
+
+            gid("new-canvas-create").addEventListener("click", e => {
+                e.preventDefault();
+
+                addStarsToCanvas(true);
+            });
+
+            gid("new-canvas-add").addEventListener("click", e => {
+                e.preventDefault();
+
+                addStarsToCanvas(false);
+            });
+
+            gid("new-canvas-delete").addEventListener("click", e => {
+                e.preventDefault();
+
+                clearCanvas();
             });
 
             gid("load-canvas-from-data").addEventListener("click", e => {
@@ -736,7 +822,18 @@
             }
 
             function makeRandomStar() {
-                return makeStar(rando(PADDING, CANVAS_WIDTH-PADDING), rando(PADDING, CANVAS_HEIGHT-PADDING), { size: STARSIZES[rando(0, SZ_MAX)] });
+                var min = parseInt(gid("new-min-size").value, 10);
+                var max = parseInt(gid("new-max-size").value, 10);
+                var innerC = gid("new-inner-color").value;
+                var outerC = gid("new-outer-color").value;
+
+                var opts = {
+                    size: rando(min, max),
+                    fill: innerC,
+                    stroke: outerC
+                };
+
+                return makeStar(rando(PADDING, CANVAS_WIDTH-PADDING), rando(PADDING, CANVAS_HEIGHT-PADDING), opts);
             }
 
             function makeStarFromEvent(e) {
@@ -762,11 +859,7 @@
                 selection: false
             });
 
-            for (var i = 0; i < STARS; i++) {
-                canvas.add(makeRandomStar());
-            }
-
-            enterAddMode();
+            gid("button-canvas").click();
         })();
     </script>
 </body>
