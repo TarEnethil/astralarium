@@ -24,12 +24,6 @@ nav input {
     height: 20px !important;
 }
 
-#save-load {
-    display: none;
-    width: 800px;
-    margin: 20px;
-}
-
 .active-mode {
     background-color: var(--primary-focus);
 }

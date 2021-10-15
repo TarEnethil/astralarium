@@ -12,7 +12,7 @@
             <li>
                 <!-- remixicon "ri-star-half-line" -->
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="19" height="19"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15.968l4.247 2.377-.949-4.773 3.573-3.305-4.833-.573L12 5.275v10.693zm0 2.292l-7.053 3.948 1.575-7.928L.587 8.792l8.027-.952L12 .5l3.386 7.34 8.027.952-5.935 5.488 1.575 7.928L12 18.26z"/></svg>
-                <strong id="brand" data-tooltip="0 Stars, 0 Lines">Astralarium</strong>
+                <strong id="brand">Astralarium</strong>
             </li>
         </ul>
         <ul>
@@ -77,6 +77,12 @@
             </li>
         </ul>
         <ul>
+            <li>
+                <a href="" id="button-info" data-tooltip="Info [h]">
+                    <!-- remixivcon "ri-information-line" -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM11 7h2v2h-2V7zm0 4h2v6h-2v-6z"/></svg>
+                </a>
+            </li>
             <li>
                 <a href="https://github.com/tarenethil/astralarium">
                     <!-- remixicon "ri-github-fill" -->
@@ -239,12 +245,45 @@
             </article>
         </div>
 
-        <fieldset id="save-load">
-            <legend>Save / Load</legend>
-            <textarea id="canvas-data"></textarea>
-            <input type="button" id="save" value="save" />
-            <input type="button" id="load" value="load" />
-        </fieldset>
+         <div class="popup container" id="popup-info">
+            <article>
+                <header>
+                    <h5>Info and Hotkeys</h5>
+
+                    <a href="" id="close-info-popup" class="close-button">
+                        <!-- remixicon "ri-close-circle-line" -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
+                    </a>
+                </header>
+
+                <div class="grid">
+                    <div class="left-column">
+                        <h6>Astralarium v0.1</h6>
+
+                        <ul>
+                            <li>Stars: <span id="num-stars">0</span></li>
+                            <li>Lines: <span id="num-lines">0</span></li>
+                        </ul>
+
+                        <a href="https://github.com/tarenethil/astralarium/issues">Report an Issue</a>
+                    </div>
+
+                    <div class="right-column">
+                        <h6>Hotkeys</h6>
+
+                        <ul>
+                            <li><strong>n</strong>: Open 'New or Load Canvas' Popup</li>
+                            <li><strong>s</strong>: Open 'Save or Export Canvas' Popup</li>
+                            <li><strong>b</strong>: Open 'Choose Background' Popup</li>
+                            <li><strong>i</strong>: Enter 'Add Star' Mode</li>
+                            <li><strong>e</strong>: Enter 'Edit Star' Mode</li>
+                            <li><strong>l</strong>: Enter 'Add Line' Mode</li>
+                            <li><strong>d</strong>: Enter 'Delete' Mode</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+        </div>
     </main>
 
     <script>
@@ -272,6 +311,8 @@
                     gid("button-save").click();
                 } else if (e.key == 'b') {
                     gid("button-background").click();
+                } else if (e.key == 'h') {
+                    gid("button-info").click();
                 } else if (e.key === 'i') {
                     enterAddMode();
                 } else if (e.key === 'e') {
@@ -323,6 +364,7 @@
                 closePopup("canvas");
                 closePopup("save");
                 closePopup("background");
+                closePopup("info");
 
                 gid("popup-" + id).style.display = "block";
 
@@ -510,8 +552,19 @@
                 });
             }
 
+            gid("button-info").addEventListener("click", e => {
+                e.preventDefault();
+                openPopup("info");
+            });
+
+            gid("close-info-popup").addEventListener("click", e => {
+                e.preventDefault();
+                closePopup("info");
+            });
+
             function updateCounters() {
-                gid("brand").setAttribute("data-tooltip", _stars.size + " Stars, " + _lines.size + " Lines");
+                gid("num-stars").innerHTML = _stars.size;
+                gid("num-lines").innerHTML = _lines.size;
             }
 
             function loadBackground(url, button_id) {
