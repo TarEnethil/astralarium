@@ -6,15 +6,10 @@ How does something like this not exist yet?
 * nicer line-adding (drag & drop)
 * line edit (thickness, color)
 * improve performance
-* settings
-    - new starmap wizard (number of stars, sizes, colors)
-    - save / load dialogue
-    - export to png (svg too?)
-    - more premade backgrounds
+* more premade backgrounds
 * constellation tracking (basically connected graphs)
     - fabric groups?
 * Add Text-Tool?
-* Hotkeys
 
 # References
 * CSS: [pico.css](https://picocss.com/)
