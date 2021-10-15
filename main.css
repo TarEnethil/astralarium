@@ -41,11 +41,14 @@ main#main {
 .popup {
     display: none;
     position: absolute;
-    top: 25px;
-    width:  500px;
+    top: 50%;
     left: 50%;
-    margin-left: -250px;
-    padding-bottom: 0.5em;
+    transform: translate(-50%, -50%);
+}
+
+.popup article {
+    padding-bottom: 0.25rem;
+    margin: 0;
 }
 
 .popup header, .popup footer {
@@ -54,16 +57,17 @@ main#main {
     margin-bottom: 0.5rem;
 }
 
-.popup footer {
-    margin-top: 0.5rem;
-}
-
-.popup footer button {
+.popup header h5 {
     margin-bottom: 0;
+    display: inline-block;
 }
 
-.popup div {
-    margin-bottom: var(--spacing);
+.popup div.left-column {
+    padding-right: calc(var(--block-spacing-vertical) / 4);
+}
+
+.popup div.right-column {
+    padding-left: calc(var(--block-spacing-vertical) / 4);
 }
 
 .popup .inline-form {

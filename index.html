@@ -89,138 +89,155 @@
     <main class="container-fluid" id="main">
         <canvas id="star-map"></canvas>
 
-        <article id="popup-canvas" class="popup">
-            <header>
-                New or Load Canvas
+        <div class="popup container" id="popup-canvas">
+            <article>
+                <header>
+                    <h5>New or Load Canvas</h5>
 
-                <a href="" id="close-canvas-popup" class="close-button">
-                    <!-- remixicon "ri-close-circle-line" -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
-                </a>
-            </header>
-
-            <details open>
-                <summary>New Canvas</summary>
-
-                <label for="new-num-stars">
-                    Number of Stars (<span id="new-num-stars-label"></span>)
-                    <input type="range" min="1" max="1000" value="150" id="new-num-stars" name="new-num-stars" />
-                </label>
+                    <a href="" id="close-canvas-popup" class="close-button">
+                        <!-- remixicon "ri-close-circle-line" -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
+                    </a>
+                </header>
 
                 <div class="grid">
-                    <label for="new-min-size">
-                        Min Size
-                        <input type="number" value="2" id="new-min-size" name="new-min-size" />
-                    </label>
+                    <div class="left-column">
+                        <h6>New Canvas</h6>
 
-                    <label for="new-max-size">
-                        Max Size
-                        <input type="number" value="7" id="new-max-size" name="new-max-size" />
-                    </label>
+                        <label for="new-num-stars">
+                            Number of Stars (<span id="new-num-stars-label"></span>)
+                            <input type="range" min="1" max="1000" value="150" id="new-num-stars" name="new-num-stars" />
+                        </label>
+
+                        <div class="grid">
+                            <label for="new-min-size">
+                                Min Size
+                                <input type="number" value="2" id="new-min-size" name="new-min-size" />
+                            </label>
+
+                            <label for="new-max-size">
+                                Max Size
+                                <input type="number" value="7" id="new-max-size" name="new-max-size" />
+                            </label>
+                        </div>
+
+                        <div class="grid">
+                            <label for="new-inner-color">
+                                Inner Color
+                                <input type="color" id="new-inner-color" value="#ffffff" />
+                            </label>
+
+                            <label for="new-outer-color">
+                                Outer Color
+                                <input type="color" id="new-outer-color" value="#cccccc" />
+                            </label>
+                        </div>
+
+                        <div class="grid">
+                            <button id="new-canvas-create">New Canvas</button>
+                            <button id="new-canvas-add">Add to Canvas</button>
+                        </div>
+                    </div>
+
+                    <div class="right-column">
+                        <h6>Load Canvas</h6>
+                        <textarea id="canvas-load-data" placeholder="JSON Data"></textarea>
+                        <button id="load-canvas-from-data">Load Canvas</button>
+
+                        <button id="new-canvas-delete" class="secondary">
+                            <!-- remixicon "ri-delete-bin-6-line" -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M7 4V2h10v2h5v2h-2v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6H2V4h5zM6 6v14h12V6H6zm3 3h2v8H9V9zm4 0h2v8h-2V9z"/></svg>
+                            Clear Canvas
+                        </button>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="popup container" id="popup-save">
+            <article>
+                <header>
+                    <h5>Export or Save Canvas</h5>
+
+                    <a href="" id="close-save-popup" class="close-button">
+                        <!-- remixicon "ri-close-circle-line" -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
+                    </a>
+                </header>
+
+                <div class="grid">
+                    <div class="left-column">
+                        <h6>Export Canvas</h6>
+
+                        <button id="export-png">Export as PNG</button>
+                        <button id="export-svg">Export as SVG (experimental)</button>
+                    </div>
+
+                    <div class="right-column">
+                        <h6>Save Canvas</h6>
+
+                        <button id="export-json" data-tooltip="Can (maybe) be loaded later">Save as JSON (experimental)</button>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="popup container" id="popup-background">
+            <article>
+                <header>
+                    <div class="grid">
+                        <h5>Choose a Background</h5>
+
+                        <div>
+                            <div class="inline-form" data-tooltip="Stretch Image to Canvas">
+                                <input type="checkbox" id="background-stretch" name="background-stretch" role="switch">
+                                <label for="background-stretch">
+                                     Stretch Image
+                                </label>
+                            </div>
+                            <a href="" id="close-background-popup" class="close-button">
+                                <!-- remixicon "ri-close-circle-line" -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="grid">
+                    <div>
+                        <h6>Color</h6>
+
+                        <input type="color" id="background-color" value="#000000" />
+                    </div>
+
+                    <div>
+                        <h6>From URL</h6>
+
+                        <input type="text" id="background-url" placeholder="http(s)://..." />
+                        <button id="button-url-background">Load Image</button>
+                    </div>
+
+                    <div>
+                        <h6 id="premade-background-spinner">Premade (stretch recommended)</h6>
+
+                        <div class="grid">
+                            <img src="https://tarenethil.github.io/astralarium/img/thumb/pexels-kai.jpg" class="background-gallery-image" />
+                            <img src="https://tarenethil.github.io/astralarium/img/thumb/pexels-kai.jpg" class="background-gallery-image" />
+                        </div>
+                    </div>
                 </div>
 
                 <div class="grid">
-                    <label for="new-inner-color">
-                        Inner Color
-                        <input type="color" id="new-inner-color" value="#ffffff" />
-                    </label>
-
-                    <label for="new-outer-color">
-                        Outer Color
-                        <input type="color" id="new-outer-color" value="#cccccc" />
-                    </label>
+                    <div></div>
+                    <button id="button-delete-background" class="secondary">
+                        <!-- remixicon "ri-delete-bin-6-line" -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M7 4V2h10v2h5v2h-2v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6H2V4h5zM6 6v14h12V6H6zm3 3h2v8H9V9zm4 0h2v8h-2V9z"/></svg>
+                        Delete Background
+                    </button>
+                    <div></div>
                 </div>
-
-                <div class="grid">
-                    <button id="new-canvas-create">New Canvas</button>
-                    <button id="new-canvas-add">Add to Canvas</button>
-                </div>
-
-                <button id="new-canvas-delete" class="secondary">
-                    <!-- remixicon "ri-delete-bin-6-line" -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M7 4V2h10v2h5v2h-2v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6H2V4h5zM6 6v14h12V6H6zm3 3h2v8H9V9zm4 0h2v8h-2V9z"/></svg>
-                    Clear Canvas
-                </button>
-            </details>
-
-            <details>
-                <summary>Load Canvas</summary>
-                <textarea id="canvas-load-data" placeholder="JSON Data"></textarea>
-                <button id="load-canvas-from-data">Load Canvas</button>
-            </details>
-        </article>
-
-        <article id="popup-save" class="popup">
-            <header>
-                Export or Save Canvas
-
-                <a href="" id="close-save-popup" class="close-button">
-                    <!-- remixicon "ri-close-circle-line" -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
-                </a>
-            </header>
-
-            <details open>
-                <summary>Export Canvas</summary>
-
-                <button id="export-png">Export as PNG</button>
-                <button id="export-svg">Export as SVG (experimental)</button>
-            </details>
-
-            <details open>
-                <summary>Save Canvas</summary>
-
-                <button id="export-json" data-tooltip="Can (maybe) be loaded later">Save as JSON (experimental)</button>
-            </details>
-        </article>
-
-        <article id="popup-background" class="popup">
-            <header>
-                Choose a Background
-
-                <a href="" id="close-background-popup" class="close-button">
-                    <!-- remixicon "ri-close-circle-line" -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
-                </a>
-            </header>
-
-            <details>
-                <summary>Color</summary>
-
-                <input type="color" id="background-color" value="#000000" />
-            </details>
-
-            <div data-tooltip="Stretch Image to Canvas" class="inline-form">
-                <input type="checkbox" id="background-stretch" name="background-stretch" role="switch">
-                <label for="background-stretch">
-                     Stretch Image
-                </label>
-            </div>
-
-            <details open>
-                <summary>From URL</summary>
-
-                <input type="text" id="background-url" placeholder="http(s)://..." />
-                <button id="button-url-background">Load Image</button>
-            </details>
-
-            <details>
-                <summary id="premade-background-spinner">Premade (stretch recommended)</summary>
-
-                <div class="grid">
-                    <img src="https://tarenethil.github.io/astralarium/img/thumb/pexels-kai.jpg" class="background-gallery-image" />
-                    <img src="https://tarenethil.github.io/astralarium/img/thumb/pexels-kai.jpg" class="background-gallery-image" />
-                </div>
-            </details>
-
-            <footer>
-                <button id="button-delete-background" class="secondary">
-                    <!-- remixicon "ri-delete-bin-6-line" -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M7 4V2h10v2h5v2h-2v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6H2V4h5zM6 6v14h12V6H6zm3 3h2v8H9V9zm4 0h2v8h-2V9z"/></svg>
-                    Delete Background
-                </button>
-            </footer>
-        </article>
+            </article>
+        </div>
 
         <fieldset id="save-load">
             <legend>Save / Load</legend>
@@ -303,6 +320,7 @@
                 canvas.backgroundColor = "#000000";
                 _stars = new Map();
                 _lines = new Map();
+                updateCounters();
             }
 
             function addStarsToCanvas(newCanvas) {
