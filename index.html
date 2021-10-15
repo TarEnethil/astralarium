@@ -279,6 +279,7 @@
                             <li><strong>e</strong>: Enter 'Edit Star' Mode</li>
                             <li><strong>l</strong>: Enter 'Add Line' Mode</li>
                             <li><strong>d</strong>: Enter 'Delete' Mode</li>
+                            <li><strong>Esc</strong>: Close Popup / Leave Mode</li>
                         </ul>
                     </div>
                 </div>
@@ -323,10 +324,7 @@
                     enterDeleteMode();
                 } else if (e.key === 'Escape') {
                     resetMode();
-
-                    closePopup("canvas");
-                    closePopup("save");
-                    closePopup("background");
+                    closePopups();
                 };
             });
 
@@ -354,8 +352,27 @@
                 enterDeleteMode();
             });
 
+            function setupPopup(id) {
+                gid("button-" + id).addEventListener("click", e => {
+                    e.preventDefault();
+                    openPopup(id);
+                });
+
+                gid("close-" + id + "-popup").addEventListener("click", e => {
+                    e.preventDefault();
+                    closePopup(id);
+                });
+            }
+
             function closePopup(id) {
                 gid("popup-" + id).style.display = "none";
+            }
+
+            function closePopups() {
+                closePopup("canvas");
+                closePopup("save");
+                closePopup("background");
+                closePopup("info");
             }
 
             function openPopup(id) {
@@ -370,11 +387,6 @@
 
                 document.activeElement.blur();
             }
-
-            gid("button-canvas").addEventListener("click", e => {
-                e.preventDefault();
-                openPopup("canvas");
-            });
 
             gid("new-num-stars-label").innerHTML = gid("new-num-stars").value;
             gid("new-num-stars").oninput = () => {
@@ -497,36 +509,11 @@
                 triggerDownload("stars.json", localURL);
             });
 
-            gid("close-canvas-popup").addEventListener("click", e => {
-                e.preventDefault();
-                closePopup("canvas");
-            });
-
-            gid("button-save").addEventListener("click", e => {
-                e.preventDefault();
-                openPopup("save");
-            });
-
-            gid("close-save-popup").addEventListener("click", e => {
-                e.preventDefault();
-                closePopup("save");
-            });
-
-            gid("button-background").addEventListener("click", e => {
-                e.preventDefault();
-                openPopup("background");
-            });
-
             gid("button-delete-background").addEventListener("click", e => {
                 e.preventDefault();
 
                 canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
 
-                closePopup("background");
-            });
-
-            gid("close-background-popup").addEventListener("click", e => {
-                e.preventDefault();
                 closePopup("background");
             });
 
@@ -552,15 +539,10 @@
                 });
             }
 
-            gid("button-info").addEventListener("click", e => {
-                e.preventDefault();
-                openPopup("info");
-            });
-
-            gid("close-info-popup").addEventListener("click", e => {
-                e.preventDefault();
-                closePopup("info");
-            });
+            setupPopup("canvas");
+            setupPopup("save");
+            setupPopup("background");
+            setupPopup("info");
 
             function updateCounters() {
                 gid("num-stars").innerHTML = _stars.size;
@@ -633,6 +615,7 @@
             }
 
             function setMode(mode) {
+                closePopups();
                 _mode = mode;
                 gid("mode-star-" + mode).classList.add("active-mode");
             }
