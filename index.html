@@ -132,8 +132,8 @@
                 </div>
 
                 <div class="grid">
-                    <button id="new-canvas-create" data-tooltip="Create new Canvas with these settings">New Canvas</button>
-                    <button id="new-canvas-add" data-tooltip="Add stars to existing canvas">Add to Canvas</button>
+                    <button id="new-canvas-create">New Canvas</button>
+                    <button id="new-canvas-add">Add to Canvas</button>
                 </div>
 
                 <button id="new-canvas-delete" class="secondary">
@@ -176,7 +176,7 @@
 
         <article id="popup-background" class="popup">
             <header>
-                Choose a Background Image
+                Choose a Background
 
                 <a href="" id="close-background-popup" class="close-button">
                     <!-- remixicon "ri-close-circle-line" -->
@@ -184,10 +184,16 @@
                 </a>
             </header>
 
+            <details>
+                <summary>Color</summary>
+
+                <input type="color" id="background-color" value="#000000" />
+            </details>
+
             <div data-tooltip="Stretch Image to Canvas" class="inline-form">
                 <input type="checkbox" id="background-stretch" name="background-stretch" role="switch">
                 <label for="background-stretch">
-                     Stretch
+                     Stretch Image
                 </label>
             </div>
 
@@ -439,6 +445,12 @@
                 e.preventDefault();
                 closePopup("background");
             });
+
+            gid("background-color").oninput = () => {
+                canvas.backgroundColor = gid("background-color").value;
+                canvas.requestRenderAll();
+                closePopup("background");
+            };
 
             gid("button-url-background").addEventListener("click", e => {
                 var v = gid("background-url").value;
