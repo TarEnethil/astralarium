@@ -63,6 +63,16 @@
         };
     });
 
+    // don't propagate keyup events when entering text, except for Esc
+    var inputs = document.querySelectorAll("input");
+    inputs.forEach(i => {
+        i.addEventListener('keyup', e => {
+            if (e.key != 'Escape') {
+                e.stopPropagation();
+            }
+        });
+    });
+
     gid("mode-star-add").addEventListener("click", e => {
         e.preventDefault();
         document.activeElement.blur();
