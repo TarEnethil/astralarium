@@ -4,6 +4,31 @@
     var CANVAS_HEIGHT = window.innerHeight - gid("nav").clientHeight;
     var PADDING = 20;
     var STAR_DEFAULT_SIZE = 4;
+    var STAR_MIN_SIZE = 2;
+    var STAR_MAX_SIZE = 9;
+
+    var _starAttributeCache = {
+        name: {
+            value: "Unnamed Star",
+            disabled: false
+        },
+        color1: {
+            value: "#ffffff",
+            disabled: false,
+            tooltip: "Inner Star Color"
+        },
+        color2: {
+            value: "#cccccc",
+            disabled: false,
+            tooltip: "Outer Star Color"
+        },
+        size: {
+            value: 4,
+            disabled: false,
+            min: STAR_MIN_SIZE,
+            max: STAR_MAX_SIZE
+        }
+    };
 
     rando = fabric.util.getRandomInt;
 
@@ -61,6 +86,130 @@
         document.activeElement.blur();
         enterDeleteMode();
     });
+
+    function saveAttributePanel() {
+        var panelcfg = {
+            name: {},
+            color1: {},
+            color2: {},
+            size: {}
+        };
+
+        var field = gid("attribute-name");
+        panelcfg.name.value = field.value;
+        panelcfg.name.disabled = field.getAttribute("disabled");
+
+        field = gid("attribute-color1");
+        panelcfg.color1.value = field.value;
+        panelcfg.color1.disabled = field.getAttribute("disabled");
+        panelcfg.color1.tooltip = field.getAttribute("data-tooltip");
+
+        field = gid("attribute-color2");
+        panelcfg.color2.value = field.value;
+        panelcfg.color2.disabled = field.getAttribute("disabled");
+        panelcfg.color2.tooltip = field.getAttribute("data-tooltip");
+
+        field = gid("attribute-size");
+        panelcfg.size.value = field.value;
+        panelcfg.size.disabled = field.getAttribute("disabled");
+        panelcfg.size.min = field.getAttribute("min");
+        panelcfg.size.max = field.getAttribute("max");
+
+        return panelcfg;
+    }
+
+    function setupAttributePanel(panelcfg) {
+        if (panelcfg.name) {
+            var field = gid("attribute-name");
+
+            if (panelcfg.name.value) {
+                field.value = panelcfg.name.value;
+            } else {
+                field.value = "";
+            }
+
+            if (panelcfg.name.disabled) {
+                field.setAttribute("disabled", "disabled");
+            } else {
+                field.removeAttribute("disabled");
+            }
+        }
+
+        if (panelcfg.color1) {
+            var field = gid("attribute-color1");
+
+            if (panelcfg.color1.value) {
+                field.value = panelcfg.color1.value;
+            } else {
+                field.value = "";
+            }
+
+            if (panelcfg.color1.disabled) {
+                field.setAttribute("disabled", "disabled");
+            } else {
+                field.removeAttribute("disabled");
+            }
+
+            if (panelcfg.color1.tooltip) {
+                field.setAttribute("data-tooltip", panelcfg.color1.tooltip);
+            } else {
+                field.removeAttribute("data-tooltip");
+            }
+        }
+
+        if (panelcfg.color2) {
+            var field = gid("attribute-color2");
+
+            if (panelcfg.color2.value) {
+                field.value = panelcfg.color2.value;
+            } else {
+                field.value = "";
+            }
+
+            if (panelcfg.color2.disabled) {
+                field.setAttribute("disabled", "disabled");
+            } else {
+                field.removeAttribute("disabled");
+            }
+
+            if (panelcfg.color2.tooltip) {
+                field.setAttribute("data-tooltip", panelcfg.color2.tooltip);
+            } else {
+                field.removeAttribute("data-tooltip");
+            }
+        }
+
+        if (panelcfg.size) {
+            var field = gid("attribute-size");
+
+            if (panelcfg.size.value) {
+                field.value = panelcfg.size.value;
+            } else {
+                field.value = "";
+            }
+
+            if (panelcfg.size.disabled) {
+                field.setAttribute("disabled", "disabled");
+            } else {
+                field.removeAttribute("disabled");
+            }
+
+            if (panelcfg.size.min) {
+                field.setAttribute("min", panelcfg.size.min);
+            }
+
+            if (panelcfg.size.max) {
+                field.setAttribute("max", panelcfg.size.max);
+            }
+
+            // in edit mode, this is done via observeInt
+            if (_mode == "add") {
+                updateAttributeSizeTooltip();
+
+                field.oninput = updateAttributeSizeTooltip;
+            }
+        }
+    }
 
     function setupPopup(id) {
         gid("button-" + id).addEventListener("click", e => {
@@ -282,6 +431,11 @@
     }
 
     function resetMode() {
+        // save current values of attribute panel, so it can be restored when entering add-mode the next time
+        if (_mode == "add") {
+            _starAttributeCache = saveAttributePanel();
+        }
+
         _mode = null;
 
         gid("mode-star-add").classList.remove('active-mode');
@@ -291,7 +445,7 @@
 
         canvas.discardActiveObject();
 
-        gid("star-control").style.visibility = "hidden";
+        gid("attribute-panel").style.visibility = "hidden";
 
         _stars.forEach(star => {
             star.selectable = false;
@@ -326,6 +480,7 @@
 
     function setMode(mode) {
         closePopups();
+
         _mode = mode;
         gid("mode-star-" + mode).classList.add("active-mode");
     }
@@ -335,7 +490,9 @@
             resetMode();
             setMode("add");
 
-            gid("star-control").style.visibility = "visible";
+            setupAttributePanel(_starAttributeCache);
+
+            gid("attribute-panel").style.visibility = "visible";
 
             canvas.on({
                 "mouse:up" : makeStarFromEvent
@@ -412,13 +569,39 @@
       );
     }
 
+    function updateAttributeSizeTooltip() {
+        gid("attribute-size-label").setAttribute("data-tooltip", "Value: " + gid("attribute-size").value);
+    }
+
     function onSelect(e) {
         if (_mode == "edit") {
-            observe(e.target, "star-name", "name")
-            observe(e.target, "star-inner-color", "fill");
-            observe(e.target, "star-border-color", "stroke");
-            observeInt(e.target, "star-size", "radius");
-            gid("star-control").style.visibility = "visible";
+            var cfg = {
+                name: {
+                    disabled: false
+                },
+                color1: {
+                    disabled: false,
+                    tooltip: "Inner Star Color"
+                },
+                color2: {
+                    disabled: false,
+                    tooltip: "Outer Star Color",
+                },
+                size: {
+                    disabled: false,
+                    min: STAR_MIN_SIZE,
+                    max: STAR_MAX_SIZE
+                }
+            };
+
+            setupAttributePanel(cfg);
+
+            observe(e.target, "attribute-name", "name")
+            observe(e.target, "attribute-color1", "fill");
+            observe(e.target, "attribute-color2", "stroke");
+            observeInt(e.target, "attribute-size", "radius", updateAttributeSizeTooltip);
+            updateAttributeSizeTooltip();
+            gid("attribute-panel").style.visibility = "visible";
         }
 
         if (_mode == "line") {
@@ -439,11 +622,11 @@
     }
 
     function onDeselect(e) {
-        gid("star-control").style.visibility = "hidden";
-        unobserve("star-name");
-        unobserve("star-inner-color");
-        unobserve("star-border-color");
-        unobserve("star-size");
+        gid("attribute-panel").style.visibility = "hidden";
+        unobserve("attribute-name");
+        unobserve("attribute-color1");
+        unobserve("attribute-color2");
+        unobserve("attribute-size");
     }
 
     function onMove(e) {
@@ -514,13 +697,18 @@
         }
     }
 
-    function observeInt(elem, id, property) {
+    function observeInt(elem, id, property, func) {
         var el = document.getElementById(id);
 
         el.value = elem[property];
         el.oninput = function() {
             elem.set(property, parseInt(this.value, 10));
             elem.setCoords();
+
+            if (func) {
+                func();
+            }
+
             canvas.renderAll();
         }
     }
@@ -639,10 +827,10 @@
     function makeStarFromEvent(e) {
         if (e.target == null || e.target == undefined) {
             var opts = {
-                size: gid("star-size").value,
-                fill: gid("star-inner-color").value,
-                stroke: gid("star-border-color").value,
-                name: gid("star-name").value
+                size: gid("attribute-size").value,
+                fill: gid("attribute-color1").value,
+                stroke: gid("attribute-color2").value,
+                name: gid("attribute-name").value
             };
 
             var x = e.absolutePointer.x - opts.size - 1;
