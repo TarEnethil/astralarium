@@ -6,6 +6,9 @@
     var STAR_DEFAULT_SIZE = 4;
     var STAR_MIN_SIZE = 2;
     var STAR_MAX_SIZE = 9;
+    var LINE_DEFAULT_SIZE = 1;
+    var LINE_MIN_SIZE = 1;
+    var LINE_MAX_SIZE = 5;
 
     var _starAttributeCache = {
         name: {
@@ -23,10 +26,33 @@
             tooltip: "Outer Star Color"
         },
         size: {
-            value: 4,
+            value: STAR_DEFAULT_SIZE,
             disabled: false,
             min: STAR_MIN_SIZE,
             max: STAR_MAX_SIZE
+        }
+    };
+
+    var _lineAttributeCache = {
+        name: {
+            value: "disabled",
+            disabled: true
+        },
+        color1: {
+            value: "#ffffff",
+            disabled: false,
+            tooltip: "Line Color"
+        },
+        color2: {
+            value: "#cccccc",
+            disabled: true,
+            tooltip: "disabled"
+        },
+        size: {
+            value: LINE_DEFAULT_SIZE,
+            disabled: false,
+            min: LINE_MIN_SIZE,
+            max: LINE_MAX_SIZE
         }
     };
 
@@ -112,12 +138,12 @@
         field = gid("attribute-color1");
         panelcfg.color1.value = field.value;
         panelcfg.color1.disabled = field.getAttribute("disabled");
-        panelcfg.color1.tooltip = field.getAttribute("data-tooltip");
+        panelcfg.color1.tooltip = field.parentElement.getAttribute("data-tooltip");
 
         field = gid("attribute-color2");
         panelcfg.color2.value = field.value;
         panelcfg.color2.disabled = field.getAttribute("disabled");
-        panelcfg.color2.tooltip = field.getAttribute("data-tooltip");
+        panelcfg.color2.tooltip = field.parentElement.getAttribute("data-tooltip");
 
         field = gid("attribute-size");
         panelcfg.size.value = field.value;
@@ -161,9 +187,9 @@
             }
 
             if (panelcfg.color1.tooltip) {
-                field.setAttribute("data-tooltip", panelcfg.color1.tooltip);
+                field.parentElement.setAttribute("data-tooltip", panelcfg.color1.tooltip);
             } else {
-                field.removeAttribute("data-tooltip");
+                field.parentElement.removeAttribute("data-tooltip");
             }
         }
 
@@ -183,14 +209,23 @@
             }
 
             if (panelcfg.color2.tooltip) {
-                field.setAttribute("data-tooltip", panelcfg.color2.tooltip);
+                field.parentElement.setAttribute("data-tooltip", panelcfg.color2.tooltip);
             } else {
-                field.removeAttribute("data-tooltip");
+                field.parentElement.removeAttribute("data-tooltip");
             }
         }
 
         if (panelcfg.size) {
             var field = gid("attribute-size");
+
+            // set min and max before value
+            if (panelcfg.size.min) {
+                field.setAttribute("min", panelcfg.size.min);
+            }
+
+            if (panelcfg.size.max) {
+                field.setAttribute("max", panelcfg.size.max);
+            }
 
             if (panelcfg.size.value) {
                 field.value = panelcfg.size.value;
@@ -204,16 +239,8 @@
                 field.removeAttribute("disabled");
             }
 
-            if (panelcfg.size.min) {
-                field.setAttribute("min", panelcfg.size.min);
-            }
-
-            if (panelcfg.size.max) {
-                field.setAttribute("max", panelcfg.size.max);
-            }
-
             // in edit mode, this is done via observeInt
-            if (_mode == "add") {
+            if (_mode == "add" || _mode == "line") {
                 updateAttributeSizeTooltip();
 
                 field.oninput = updateAttributeSizeTooltip;
@@ -441,9 +468,14 @@
     }
 
     function resetMode() {
-        // save current values of attribute panel, so it can be restored when entering add-mode the next time
+        // save current values of attribute panel, so it can be restored when reentering add mode
         if (_mode == "add") {
             _starAttributeCache = saveAttributePanel();
+        }
+
+        // save current values of attribute panel, so it can be restored when reentering line mode
+        if (_mode == "line") {
+            _lineAttributeCache = saveAttributePanel();
         }
 
         _mode = null;
@@ -460,9 +492,9 @@
         _stars.forEach(star => {
             star.selectable = false;
             star.off({
-                "selected": onSelect,
-                "deselected": onDeselect,
-                "moving": onMove
+                "selected": onStarSelect,
+                "deselected": onStarDeselect,
+                "moving": onStarMove
             });
             // off() does not seem to work with the same key twice?
             star.off({
@@ -501,7 +533,6 @@
             setMode("add");
 
             setupAttributePanel(_starAttributeCache);
-
             gid("attribute-panel").style.visibility = "visible";
 
             canvas.on({
@@ -520,9 +551,9 @@
             _stars.forEach(star => {
                 star.selectable = true;
                 star.on({
-                    "selected": onSelect,
-                    "deselected": onDeselect,
-                    "moving": onMove
+                    "selected": onStarSelect,
+                    "deselected": onStarDeselect,
+                    "moving": onStarMove
                 });
             });
 
@@ -535,11 +566,14 @@
             resetMode();
             setMode("line");
 
+            setupAttributePanel(_lineAttributeCache);
+            gid("attribute-panel").style.visibility = "visible";
+
             _stars.forEach(star => {
                 star.selectable = true;
                 star.on({
-                    "selected": onSelect,
-                    "deselected": onDeselect
+                    "selected": onStarSelect,
+                    "deselected": onStarDeselect
                 });
                 star.lockMovementX = true;
                 star.lockMovementY = true;
@@ -583,7 +617,7 @@
         gid("attribute-size-label").setAttribute("data-tooltip", "Value: " + gid("attribute-size").value);
     }
 
-    function onSelect(e) {
+    function onStarSelect(e) {
         if (_mode == "edit") {
             var cfg = {
                 name: {
@@ -619,7 +653,6 @@
                 var line = makeLine(_lastObject, e.target);
                 canvas.add(line);
                 canvas.sendToBack(line);
-                canvas.renderAll();
                 _lastObject = null;
                 _pickingTo = false;
                 canvas.discardActiveObject();
@@ -631,15 +664,17 @@
         }
     }
 
-    function onDeselect(e) {
-        gid("attribute-panel").style.visibility = "hidden";
-        unobserve("attribute-name");
-        unobserve("attribute-color1");
-        unobserve("attribute-color2");
-        unobserve("attribute-size");
+    function onStarDeselect(e) {
+        if (_mode == "edit") {
+            gid("attribute-panel").style.visibility = "hidden";
+            unobserve("attribute-name");
+            unobserve("attribute-color1");
+            unobserve("attribute-color2");
+            unobserve("attribute-size");
+        }
     }
 
-    function onMove(e) {
+    function onStarMove(e) {
         updateLines(e.transform.target);
     }
 
@@ -686,11 +721,15 @@
         var c = e.getCenterPoint();
 
         e.lines_from.forEach(uuid => {
-            _lines.get(uuid).set({ 'x1': c.x, 'y1': c.y });
+            var l = _lines.get(uuid);
+            var t2 = l.strokeWidth / 2;
+            l.set({ 'x1': c.x - t2, 'y1': c.y - t2 });
         });
 
         e.lines_to.forEach(uuid => {
-            _lines.get(uuid).set({ 'x2': c.x, 'y2': c.y });
+            var l = _lines.get(uuid);
+            var t2 = l.strokeWidth / 2;
+            l.set({ 'x2': c.x - t2, 'y2': c.y - t2 });
         });
 
         canvas.renderAll();
@@ -796,12 +835,15 @@
     }
 
     function makeLine(from, to) {
+        var thickness = parseInt(gid("attribute-size").value, 10);
+        var t2 = thickness / 2;
         var c1 = from.getCenterPoint();
         var c2 = to.getCenterPoint();
-        var coords = [c1.x, c1.y, c2.x, c2.y];
+        // correct coords by half of line width
+        var coords = [c1.x - t2, c1.y - t2, c2.x - t2, c2.y - t2];
         var line = new fabric.Line(coords, {
-            stroke: "#ffffff",
-            strokeWidth: 1
+            stroke: gid("attribute-color1").value,
+            strokeWidth: thickness
         });
 
         line.uuid = uuidv4();
@@ -815,6 +857,8 @@
         setupLine(line);
 
         updateCounters();
+
+        console.log(line);
 
         return line;
     }
