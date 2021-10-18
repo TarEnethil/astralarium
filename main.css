@@ -32,6 +32,10 @@ main#main {
     padding: 0;
 }
 
+.invisible {
+    visibility: hidden;
+}
+
 .popup {
     display: none;
     position: absolute;

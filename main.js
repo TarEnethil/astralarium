@@ -41,14 +41,14 @@
             disabled: true
         },
         color1: {
-            value: "#ffffff",
-            disabled: false,
-            tooltip: "Line Color"
-        },
-        color2: {
             value: "#cccccc",
             disabled: true,
             tooltip: "disabled"
+        },
+        color2: {
+            value: "#ffffff",
+            disabled: false,
+            tooltip: "Line Color"
         },
         size: {
             value: LINE_DEFAULT_SIZE,
@@ -139,17 +139,17 @@
 
         field = gid("attribute-color1");
         panelcfg.color1.value = field.value;
-        panelcfg.color1.disabled = field.getAttribute("disabled");
+        panelcfg.color1.disabled = field.parentElement.classList.contains("invisible");
         panelcfg.color1.tooltip = field.parentElement.getAttribute("data-tooltip");
 
         field = gid("attribute-color2");
         panelcfg.color2.value = field.value;
-        panelcfg.color2.disabled = field.getAttribute("disabled");
+        panelcfg.color2.disabled = field.parentElement.classList.contains("invisible");
         panelcfg.color2.tooltip = field.parentElement.getAttribute("data-tooltip");
 
         field = gid("attribute-size");
         panelcfg.size.value = field.value;
-        panelcfg.size.disabled = field.getAttribute("disabled");
+        panelcfg.size.disabled = field.parentElement.classList.contains("invisible");
         panelcfg.size.min = field.getAttribute("min");
         panelcfg.size.max = field.getAttribute("max");
 
@@ -167,9 +167,9 @@
             }
 
             if (panelcfg.name.disabled) {
-                field.setAttribute("disabled", "disabled");
+                field.parentElement.classList.add("invisible");
             } else {
-                field.removeAttribute("disabled");
+                field.parentElement.classList.remove("invisible");
             }
         }
 
@@ -183,9 +183,9 @@
             }
 
             if (panelcfg.color1.disabled) {
-                field.setAttribute("disabled", "disabled");
+                field.parentElement.classList.add("invisible");
             } else {
-                field.removeAttribute("disabled");
+                field.parentElement.classList.remove("invisible");
             }
 
             if (panelcfg.color1.tooltip) {
@@ -205,9 +205,9 @@
             }
 
             if (panelcfg.color2.disabled) {
-                field.setAttribute("disabled", "disabled");
+                field.parentElement.classList.add("invisible");
             } else {
-                field.removeAttribute("disabled");
+                field.parentElement.classList.remove("invisible");
             }
 
             if (panelcfg.color2.tooltip) {
@@ -236,9 +236,9 @@
             }
 
             if (panelcfg.size.disabled) {
-                field.setAttribute("disabled", "disabled");
+                field.parentElement.classList.add("invisible");
             } else {
-                field.removeAttribute("disabled");
+                field.parentElement.classList.remove("invisible");
             }
 
             // in edit mode, this is done via observeInt
@@ -713,12 +713,12 @@
                 disabled: true
             },
             color1: {
-                disabled: false,
-                tooltip: "Line Color"
-            },
-            color2: {
                 disabled: true,
                 tooltip: "disabled",
+            },
+            color2: {
+                disabled: false,
+                tooltip: "Line Color"
             },
             size: {
                 disabled: false,
@@ -729,7 +729,7 @@
 
         setupAttributePanel(cfg);
 
-        observe(e.target, "attribute-color1", "stroke");
+        observe(e.target, "attribute-color2", "stroke");
         observeInt(e.target, "attribute-size", "strokeWidth", () => {
             recalculateLinePoints(e.target);
             updateAttributeSizeTooltip();
@@ -741,7 +741,7 @@
 
     function onLineDeselect(e) {
         gid("attribute-panel").style.visibility = "hidden";
-        unobserve("attribute-color1");
+        unobserve("attribute-color2");
         unobserve("attribute-size");
     }
 
