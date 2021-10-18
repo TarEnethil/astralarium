@@ -411,6 +411,8 @@
         e.preventDefault();
 
         canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+        canvas.backgroundColor = "#000000";
+        canvas.requestRenderAll();
 
         closePopup("background");
     });
@@ -629,7 +631,7 @@
     }
 
     function updateAttributeSizeTooltip() {
-        gid("attribute-size-label").setAttribute("data-tooltip", "Value: " + gid("attribute-size").value);
+        gid("attribute-size-label").setAttribute("data-tooltip", "Size: " + gid("attribute-size").value);
     }
 
     function onStarSelect(e) {
@@ -836,6 +838,9 @@
     }
 
     function setupStar(star) {
+        star.hasControls = false;
+        star.selectable = false;
+
         star.toObject = (function(toObject) {
           return function() {
             return fabric.util.object.extend(toObject.call(this), {
@@ -868,8 +873,6 @@
             radius: size,
             fill: fill,
             stroke: stroke,
-            hasControls: false,
-            selectable: false
         });
 
         star.name = name;
@@ -888,6 +891,9 @@
     function setupLine(line) {
         line.selectable = false;
         line.evented = false;
+        line.lockMovementX = true;
+        line.lockMovementY = true;
+        line.hasControls = false;
 
         line.toObject = (function(toObject) {
           return function() {
@@ -910,11 +916,8 @@
         // correct coords by half of line width
         var coords = [c1.x - t2, c1.y - t2, c2.x - t2, c2.y - t2];
         var line = new fabric.Line(coords, {
-            stroke: gid("attribute-color1").value,
-            strokeWidth: thickness,
-            lockMovementX: true,
-            lockMovementY: true,
-            hasControls: false
+            stroke: gid("attribute-color2").value,
+            strokeWidth: thickness
         });
 
         line.uuid = uuidv4();
