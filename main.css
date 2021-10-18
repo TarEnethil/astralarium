@@ -24,6 +24,24 @@ nav input {
     height: 20px !important;
 }
 
+#brand li {
+    display: flex;
+    align-items: center;
+}
+
+#brand img {
+    margin-right: 10px;
+    width: 24px;
+    height: 24px;
+}
+
+#logo-big {
+    margin: 0 auto;
+    width: 100px;
+    height: 100px;
+    display: block;
+}
+
 .active-mode {
     background-color: var(--primary-focus);
 }

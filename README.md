@@ -1,3 +1,7 @@
+<p align="center">
+    <img src="logo.svg" alt="Astralarium Logo" />
+</p>
+
 # Astralarium
 A small, work-in-progress, offline<sup>1</sup> editor for custom star maps and constellations.
 
