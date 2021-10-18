@@ -4,7 +4,6 @@ How does something like this not exist yet?
 ## TODO
 * comment the code :)
 * nicer line-adding (drag & drop)
-* line edit (thickness, color)
 * improve performance
 * more premade backgrounds
 * constellation tracking (basically connected graphs)

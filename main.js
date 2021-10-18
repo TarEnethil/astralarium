@@ -1,8 +1,10 @@
 (function() {
     var gid = function(id) { return document.getElementById(id); };
+
     var CANVAS_WIDTH = window.innerWidth;
     var CANVAS_HEIGHT = window.innerHeight - gid("nav").clientHeight;
     var PADDING = 20;
+
     var STAR_DEFAULT_SIZE = 4;
     var STAR_MIN_SIZE = 2;
     var STAR_MAX_SIZE = 9;
@@ -508,6 +510,10 @@
             line.evented = false;
             line.selectable = false;
             line.off({
+                "selected": onLineSelect,
+                "deselected": onLineDeselect
+            });
+            line.off({
                 "selected": deleteLineEvent
             });
         });
@@ -554,6 +560,15 @@
                     "selected": onStarSelect,
                     "deselected": onStarDeselect,
                     "moving": onStarMove
+                });
+            });
+
+            _lines.forEach(line => {
+                line.evented = true;
+                line.selectable = true;
+                line.on({
+                    "selected": onLineSelect,
+                    "deselected": onLineDeselect
                 });
             });
 
@@ -643,7 +658,11 @@
             observe(e.target, "attribute-name", "name")
             observe(e.target, "attribute-color1", "fill");
             observe(e.target, "attribute-color2", "stroke");
-            observeInt(e.target, "attribute-size", "radius", updateAttributeSizeTooltip);
+            observeInt(e.target, "attribute-size", "radius", () => {
+                // recalculate line centers when changing size
+                updateLines(e.target);
+                updateAttributeSizeTooltip();
+            });
             updateAttributeSizeTooltip();
             gid("attribute-panel").style.visibility = "visible";
         }
@@ -672,6 +691,56 @@
             unobserve("attribute-color2");
             unobserve("attribute-size");
         }
+    }
+
+    function recalculateLinePoints(line) {
+        var from = _stars.get(line.from).getCenterPoint();
+        var to = _stars.get(line.to).getCenterPoint();
+        var t2 = line.strokeWidth / 2;
+
+        line.set({ 'x1': from.x - t2, 'y1': from.y - t2 });
+        line.set({ 'x2': to.x - t2, 'y2': to.y - t2 });
+
+        canvas.renderAll();
+    }
+
+    function onLineSelect(e) {
+        var cfg = {
+            name: {
+                value: "disabled",
+                disabled: true
+            },
+            color1: {
+                disabled: false,
+                tooltip: "Line Color"
+            },
+            color2: {
+                disabled: true,
+                tooltip: "disabled",
+            },
+            size: {
+                disabled: false,
+                min: LINE_MIN_SIZE,
+                max: LINE_MAX_SIZE
+            }
+        };
+
+        setupAttributePanel(cfg);
+
+        observe(e.target, "attribute-color1", "stroke");
+        observeInt(e.target, "attribute-size", "strokeWidth", () => {
+            recalculateLinePoints(e.target);
+            updateAttributeSizeTooltip();
+        });
+
+        updateAttributeSizeTooltip();
+        gid("attribute-panel").style.visibility = "visible";
+    }
+
+    function onLineDeselect(e) {
+        gid("attribute-panel").style.visibility = "hidden";
+        unobserve("attribute-color1");
+        unobserve("attribute-size");
     }
 
     function onStarMove(e) {
@@ -767,9 +836,6 @@
     }
 
     function setupStar(star) {
-        star.hasControls = false;
-        star.selectable = false;
-
         star.toObject = (function(toObject) {
           return function() {
             return fabric.util.object.extend(toObject.call(this), {
@@ -801,7 +867,9 @@
             strokeWidth: 2,
             radius: size,
             fill: fill,
-            stroke: stroke
+            stroke: stroke,
+            hasControls: false,
+            selectable: false
         });
 
         star.name = name;
@@ -843,7 +911,10 @@
         var coords = [c1.x - t2, c1.y - t2, c2.x - t2, c2.y - t2];
         var line = new fabric.Line(coords, {
             stroke: gid("attribute-color1").value,
-            strokeWidth: thickness
+            strokeWidth: thickness,
+            lockMovementX: true,
+            lockMovementY: true,
+            hasControls: false
         });
 
         line.uuid = uuidv4();
@@ -857,8 +928,6 @@
         setupLine(line);
 
         updateCounters();
-
-        console.log(line);
 
         return line;
     }
