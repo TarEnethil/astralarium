@@ -63,9 +63,6 @@
     var _stars = new Map();
     var _lines = new Map();
 
-    var _lastObject;
-    var _pickingTo = false;
-
     var _mode;
 
     document.addEventListener('keyup', e => {
@@ -493,6 +490,8 @@
 
         gid("attribute-panel").style.visibility = "hidden";
 
+        canvas.off("mouse:down");
+
         _stars.forEach(star => {
             star.selectable = false;
             star.off({
@@ -519,9 +518,6 @@
                 "selected": deleteLineEvent
             });
         });
-
-        _pickingTo = false;
-        _lastObject = null;
 
         canvas.off({
             "mouse:up" : makeStarFromEvent
@@ -586,14 +582,53 @@
             setupAttributePanel(_lineAttributeCache);
             gid("attribute-panel").style.visibility = "visible";
 
-            _stars.forEach(star => {
-                star.selectable = true;
-                star.on({
-                    "selected": onStarSelect,
-                    "deselected": onStarDeselect
-                });
-                star.lockMovementX = true;
-                star.lockMovementY = true;
+            canvas.on({
+                "mouse:down": e => {
+                    var line;
+                    var startStar;
+
+                    if (e.target) {
+                        var center = e.target.getCenterPoint();
+                        var t2 = parseInt(gid("attribute-size").value, 10);
+                        var x = center.x - t2;
+                        var y = center.y - t2;
+                        var coords = [x, y, x, y];
+                        line = new fabric.Line(coords, {
+                            evented: false,
+                            selectable: false,
+                            stroke: gid("attribute-color2").value,
+                            strokeWidth: t2
+                        });
+                        canvas.add(line);
+                        canvas.sendToBack(line);
+                        startStar = e.target;
+                        canvas.requestRenderAll();
+                    }
+
+                    canvas.on({
+                        "mouse:move": e => {
+                            if (line) {
+                                var t2 = line.strokeWidth;
+                                line.set({ 'x2': e.absolutePointer.x - t2, 'y2': e.absolutePointer.y - t2 });
+                                canvas.renderAll();
+                            }
+                        },
+                        "mouse:up": e => {
+                            if (e.target && line) {
+                                var realLine = makeLine(startStar, e.target);
+                                canvas.add(realLine);
+                                canvas.sendToBack(realLine);
+                            }
+
+                            canvas.remove(line);
+                            line = null;
+                            startStar = null;
+                            canvas.off("mouse:move");
+                            canvas.off("mouse:up");
+                            canvas.renderAll();
+                        }
+                    });
+                }
             });
 
             canvas.requestRenderAll();
@@ -667,21 +702,6 @@
             });
             updateAttributeSizeTooltip();
             gid("attribute-panel").style.visibility = "visible";
-        }
-
-        if (_mode == "line") {
-            if (_pickingTo) {
-                var line = makeLine(_lastObject, e.target);
-                canvas.add(line);
-                canvas.sendToBack(line);
-                _lastObject = null;
-                _pickingTo = false;
-                canvas.discardActiveObject();
-                canvas.requestRenderAll();
-            } else {
-                _pickingTo = true;
-                _lastObject = canvas.getActiveObject();
-            }
         }
     }
 
