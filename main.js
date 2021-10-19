@@ -299,6 +299,8 @@
     function addStarsToCanvas(newCanvas) {
         gid("new-canvas-create").setAttribute("aria-busy", true);
 
+        canvas.renderOnAddRemove = false;
+
         if (newCanvas) {
             clearCanvas();
         }
@@ -313,6 +315,9 @@
         if (newCanvas) {
             closePopup("canvas");
         }
+
+        canvas.renderOnAddRemove = true;
+        canvas.requestRenderAll();
     }
 
     gid("new-canvas-create").addEventListener("click", e => {
@@ -341,25 +346,30 @@
         _stars = new Map();
         _lines = new Map();
 
-        if (data != undefined && data != '') {
-            canvas.loadFromJSON(data);
+        canvas.renderOnAddRemove = false;
 
-            canvas.getObjects("line").forEach(line => {
-                setupLine(line);
+        if (data != undefined && data != '') {
+            canvas.loadFromJSON(data, canvas.renderAll.bind(canvas), (j, o) => {
+                if (o.type == "circle") {
+                    setupStar(o);
+                } else if (o.type == "line") {
+                    setupLine(o);
+                }
             });
 
             canvas.getObjects("circle").forEach(star => {
-                setupStar(star);
-
                 // for some reason, x{1,2} and y{1,2} are not correctly serialized
                 // as a workaround, we update the line coordinates here
                 updateLines(star);
             });
 
+            canvas.requestRenderAll();
             gid("load-canvas-from-data").removeAttribute("aria-busy");
             closePopup("canvas");
             updateCounters();
         }
+
+        canvas.renderOnAddRemove = true;
     });
 
     function triggerDownload(name, url) {
@@ -407,9 +417,8 @@
     gid("button-delete-background").addEventListener("click", e => {
         e.preventDefault();
 
-        canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
         canvas.backgroundColor = "#000000";
-        canvas.requestRenderAll();
+        canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
 
         closePopup("background");
     });
@@ -545,6 +554,16 @@
                 line.selectable = true;
             });
 
+            var lastMoveEvent;
+
+            function frame() {
+                if (lastMoveEvent) {
+                    onStarMove(lastMoveEvent);
+                    fabric.util.requestAnimFrame(frame, canvas.getElement());
+                    canvas.requestRenderAll();
+                }
+            }
+
             canvas.on({
                 "selection:created": e => {
                     if (e.target) {
@@ -564,14 +583,19 @@
                         }
                     }
                 },
+                "mouse:up": e => {
+                    lastMoveEvent = null;
+                },
                 "object:moving": e => {
                     if (e.target && e.target.type == "circle") {
-                        onStarMove(e);
+                        lastMoveEvent = e;
                     }
                 }
             });
 
             canvas.requestRenderAll();
+
+            frame();
         }
     }
 
@@ -586,11 +610,13 @@
             canvas.on({
                 "mouse:down": e => {
                     var tmpLine;
+                    var t2;
+                    var mouse;
                     var startStar;
 
                     if (e.target) {
                         var center = e.target.getCenterPoint();
-                        var t2 = parseInt(gid("attribute-size").value, 10);
+                        t2 = parseInt(gid("attribute-size").value, 10);
                         var x = center.x - t2;
                         var y = center.y - t2;
                         var coords = [x, y, x, y];
@@ -604,15 +630,23 @@
                         canvas.sendToBack(tmpLine);
                         startStar = e.target;
                         canvas.requestRenderAll();
+
+                        mouse = e.absolutePointer;
+
+                        frame();
+                    }
+
+                    function frame() {
+                        if (tmpLine) {
+                            tmpLine.set({ 'x2': mouse.x - t2, 'y2': mouse.y - t2 });
+                            fabric.util.requestAnimFrame(frame, tmpLine);
+                            canvas.requestRenderAll();
+                        }
                     }
 
                     canvas.on({
                         "mouse:move": e => {
-                            if (tmpLine) {
-                                var t2 = tmpLine.strokeWidth;
-                                tmpLine.set({ 'x2': e.absolutePointer.x - t2, 'y2': e.absolutePointer.y - t2 });
-                                canvas.renderAll();
-                            }
+                            mouse = e.absolutePointer;
                         },
                         "mouse:up": e => {
                             if (e.target && tmpLine) {
@@ -624,6 +658,7 @@
                             canvas.remove(tmpLine);
                             tmpLine = null;
                             startStar = null;
+                            mouse = null;
                             canvas.off("mouse:move");
                             canvas.off("mouse:up");
                             canvas.renderAll();
@@ -706,6 +741,7 @@
                 // recalculate line centers when changing size
                 updateLines(e.target);
                 updateAttributeSizeTooltip();
+                canvas.requestRenderAll();
             });
             updateAttributeSizeTooltip();
             gid("attribute-panel").style.visibility = "visible";
@@ -829,8 +865,6 @@
             var t2 = l.strokeWidth / 2;
             l.set({ 'x2': c.x - t2, 'y2': c.y - t2 });
         });
-
-        canvas.renderAll();
     }
 
     function observe(elem, id, property) {
@@ -900,6 +934,7 @@
             radius: size,
             fill: fill,
             stroke: stroke,
+            includeDefaultValues: false
         });
 
         star.name = name;
@@ -944,7 +979,8 @@
         var coords = [c1.x - t2, c1.y - t2, c2.x - t2, c2.y - t2];
         var line = new fabric.Line(coords, {
             stroke: gid("attribute-color2").value,
-            strokeWidth: thickness
+            strokeWidth: thickness,
+            includeDefaultValues: false
         });
 
         line.uuid = uuidv4();

@@ -3,8 +3,7 @@ How does something like this not exist yet?
 
 ## TODO
 * comment the code :)
-* nicer line-adding (drag & drop)
-* improve performance
+* improve performance for > 500 stars
 * more premade backgrounds
 * constellation tracking (basically connected graphs)
     - fabric groups?
