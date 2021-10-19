@@ -81,7 +81,7 @@ main#main {
 }
 
 .background-gallery-image {
-    border: 3px solid var(--background-color);
+    border: 3px solid var(--secondary-hover);
 }
 
 .background-gallery-image:hover {
