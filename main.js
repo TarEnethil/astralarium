@@ -295,6 +295,7 @@
         if (!keepBackground) {
             canvas.backgroundColor = "#000000";
             canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+            gid("background-color").value = "#000000";
         }
 
         _stars = new Map();
@@ -436,6 +437,7 @@
 
         canvas.backgroundColor = "#000000";
         canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+        gid("background-color").value = "#000000";
 
         closePopup("background");
     });
@@ -445,6 +447,17 @@
         canvas.requestRenderAll();
         closePopup("background");
     };
+
+    gid("background-opacity-label").innerHTML = gid("background-opacity").value;
+    gid("background-opacity").oninput = () => {
+        var opacity = parseInt(gid("background-opacity").value, 10);
+        gid("background-opacity-label").innerHTML = opacity;
+
+        if (canvas.backgroundImage) {
+            canvas.backgroundImage.set("opacity", opacity / 100.0);
+            canvas.renderAll();
+        }
+    }
 
     gid("button-url-background").addEventListener("click", e => {
         var v = gid("background-url").value;
@@ -477,7 +490,7 @@
         b.setAttribute("aria-busy", true);
 
         fabric.Image.fromURL(url, imgObj => {
-            var opts = { opacity: 1,
+            var opts = { opacity: gid("background-opacity").value / 100.0,
                          originX: 'left',
                          originY: 'top',
                          crossOrigin: true };

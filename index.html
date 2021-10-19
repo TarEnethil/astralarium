@@ -206,22 +206,12 @@
         <div class="popup container" id="popup-background">
             <article>
                 <header>
-                    <div class="grid">
-                        <h5>Choose a Background</h5>
+                    <h5>Choose a Background</h5>
 
-                        <div>
-                            <div class="inline-form" data-tooltip="Stretch Image to Canvas">
-                                <input type="checkbox" id="background-stretch" name="background-stretch" role="switch">
-                                <label for="background-stretch">
-                                     Stretch Image
-                                </label>
-                            </div>
-                            <a href="" id="close-background-popup" class="close-button">
-                                <!-- remixicon "ri-close-circle-line" -->
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
-                            </a>
-                        </div>
-                    </div>
+                    <a href="" id="close-background-popup" class="close-button">
+                        <!-- remixicon "ri-close-circle-line" -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
+                    </a>
                 </header>
 
                 <div class="grid">
@@ -229,6 +219,17 @@
                         <h6>Color</h6>
 
                         <input type="color" id="background-color" value="#000000" />
+
+                        <h6>Image Options</h6>
+                        <label for="background-stretch">
+                            <input type="checkbox" id="background-stretch" name="background-stretch" role="switch">
+                             Stretch Image
+                        </label>
+
+                        <label for="background-opacity" class="top-margin" data-tooltip="Opacity of Background Image">
+                                Opacity (<span id="background-opacity-label">100</span>%)
+                                <input type="range" min="1" max="100" value="100" id="background-opacity" name="background-opacity" />
+                        </label>
                     </div>
 
                     <div>

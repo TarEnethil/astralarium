@@ -80,6 +80,10 @@ main#main {
     padding-bottom: .5rem;
 }
 
+.top-margin {
+    margin-top: var(--spacing);
+}
+
 .background-gallery-row {
     margin-bottom:var(--spacing);
 }
@@ -111,7 +115,8 @@ main#main {
 }
 
 nav li[data-tooltip],
-.popup div[data-tooltip] {
+.popup div[data-tooltip],
+.popup label[data-tooltip] {
   border-bottom: none !important;
   text-decoration: none;
   cursor: inherit;
