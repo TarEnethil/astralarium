@@ -338,6 +338,17 @@
         addStarsToCanvas(false);
     });
 
+    gid("new-canvas-delete-lines").addEventListener("click", e => {
+        e.preventDefault();
+
+        var lines = canvas.getObjects("line");
+        lines.forEach(line => {
+            deleteLine(line.uuid);
+        });
+
+        updateCounters();
+    });
+
     gid("new-canvas-delete").addEventListener("click", e => {
         e.preventDefault();
 

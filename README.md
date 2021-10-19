@@ -7,7 +7,6 @@ A small, work-in-progress, offline<sup>1</sup> editor for custom star maps and c
 ## TODO
 * comment the code
 * improve performance for > 500 stars
-* add 'clear lines' button
 * add 'random constellation' function
 
 ### Maybe
