@@ -288,9 +288,15 @@
         gid("new-num-stars-label").innerHTML = gid("new-num-stars").value;
     };
 
-    function clearCanvas() {
-        canvas.clear();
-        canvas.backgroundColor = "#000000";
+    function clearCanvas(keepBackground) {
+        // remove with getObject() instead of clear(), this keeps the background image
+        canvas.remove(...canvas.getObjects());
+
+        if (!keepBackground) {
+            canvas.backgroundColor = "#000000";
+            canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+        }
+
         _stars = new Map();
         _lines = new Map();
         updateCounters();
@@ -302,7 +308,7 @@
         canvas.renderOnAddRemove = false;
 
         if (newCanvas) {
-            clearCanvas();
+            clearCanvas(gid("new-keep-bg").checked);
         }
 
         for (var i = 0; i < gid("new-num-stars").value; i++) {
@@ -335,7 +341,7 @@
     gid("new-canvas-delete").addEventListener("click", e => {
         e.preventDefault();
 
-        clearCanvas();
+        clearCanvas(false);
     });
 
     gid("load-canvas-from-data").addEventListener("click", e => {

@@ -108,12 +108,21 @@
 
                 <div class="grid">
                     <div class="left-column">
-                        <h6>New Canvas</h6>
+                        <div class="grid">
+                            <h6>New Canvas</h6>
 
-                        <label for="new-num-stars">
-                            Number of Stars (<span id="new-num-stars-label"></span>)
-                            <input type="range" min="1" max="1000" value="150" id="new-num-stars" name="new-num-stars" />
-                        </label>
+                            <label for="new-keep-bg">
+                                <input type="checkbox" id="new-keep-bg" name="new-keep-bg" role="switch">
+                                Keep Background
+                            </label>
+                        </div>
+
+                        <div class="grid">
+                            <label for="new-num-stars">
+                                Number of Stars (<span id="new-num-stars-label"></span>)
+                                <input type="range" min="1" max="1000" value="150" id="new-num-stars" name="new-num-stars" />
+                            </label>
+                        </div>
 
                         <div class="grid">
                             <label for="new-min-size">
