@@ -439,8 +439,8 @@
 
     var images = document.getElementsByClassName("background-gallery-image");
     for (var i = 0; i < images.length; i++) {
-        var url = images[i].src.replace(/\/thumb/, "");
         images[i].addEventListener("click", e => {
+            var url = e.target.src.replace(/\/thumb/, "");
             loadBackground(url, "premade-background-spinner");
         });
     }

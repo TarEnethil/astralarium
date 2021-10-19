@@ -80,6 +80,14 @@ main#main {
     padding-bottom: .5rem;
 }
 
+.background-gallery-row {
+    margin-bottom:var(--spacing);
+}
+
+.background-gallery-row:last-child {
+    margin-bottom: 0;
+}
+
 .background-gallery-image {
     border: 3px solid var(--secondary-hover);
 }
