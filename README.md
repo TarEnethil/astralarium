@@ -1,12 +1,19 @@
-# Astralarium (WIP)
-How does something like this not exist yet?
+# Astralarium
+A small, work-in-progress, offline<sup>1</sup> editor for custom star maps and constellations.
+
+
+<sup>1</sup>: An internet connection is needed if you want to load a background image.
 
 ## TODO
-* comment the code :)
+* comment the code
 * improve performance for > 500 stars
-* constellation tracking (basically connected graphs)
-    - fabric groups?
-* Add Text-Tool?
+* add 'clear lines' button
+* add 'random constellation' function
+
+### Maybe
+* constellation tracking
+* add text tool
+* optionally display star / constellation name
 
 # References
 * CSS: [pico.css](https://picocss.com/)
@@ -16,5 +23,5 @@ How does something like this not exist yet?
 ## Premade Backgrounds
 * Background 1: ["Cluster of Stars" by Kai Pilger from Pexels](https://www.pexels.com/photo/cluster-of-stars-1341279/)
 * Background 2: Photo by [Andy Holmes](https://unsplash.com/@andyjh07?) on [unsplash](https://unsplash.com/wallpapers/nature/star)
-* Background 3: Photo by [Jeremy Perkins)(https://unsplash.com/@jeremyperkins)] on [unsplash](https://unsplash.com/wallpapers/nature/star)
+* Background 3: Photo by [Jeremy Perkins](https://unsplash.com/@jeremyperkins)] on [unsplash](https://unsplash.com/wallpapers/nature/star)
 * Background 4: Photo by [Graham Holtshausen](https://unsplash.com/@freedomstudios) on [unsplash](https://unsplash.com/wallpapers/nature/star)
