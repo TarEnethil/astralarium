@@ -490,19 +490,14 @@
 
         gid("attribute-panel").style.visibility = "hidden";
 
+        canvas.off("mouse:up");
         canvas.off("mouse:down");
+        canvas.off("selection:created");
+        canvas.off("before:selection:cleared");
+        canvas.off("object:moving");
 
         _stars.forEach(star => {
             star.selectable = false;
-            star.off({
-                "selected": onStarSelect,
-                "deselected": onStarDeselect,
-                "moving": onStarMove
-            });
-            // off() does not seem to work with the same key twice?
-            star.off({
-                "selected": deleteStarEvent
-            });
             star.lockMovementX = false;
             star.lockMovementY = false;
         });
@@ -510,17 +505,6 @@
         _lines.forEach(line => {
             line.evented = false;
             line.selectable = false;
-            line.off({
-                "selected": onLineSelect,
-                "deselected": onLineDeselect
-            });
-            line.off({
-                "selected": deleteLineEvent
-            });
-        });
-
-        canvas.off({
-            "mouse:up" : makeStarFromEvent
         });
     }
 
@@ -554,20 +538,37 @@
 
             _stars.forEach(star => {
                 star.selectable = true;
-                star.on({
-                    "selected": onStarSelect,
-                    "deselected": onStarDeselect,
-                    "moving": onStarMove
-                });
             });
 
             _lines.forEach(line => {
                 line.evented = true;
                 line.selectable = true;
-                line.on({
-                    "selected": onLineSelect,
-                    "deselected": onLineDeselect
-                });
+            });
+
+            canvas.on({
+                "selection:created": e => {
+                    if (e.target) {
+                        if (e.target.type == "circle") {
+                            onStarSelect(e);
+                        } else if (e.target.type == "line") {
+                            onLineSelect(e);
+                        }
+                    }
+                },
+                "before:selection:cleared": e => {
+                    if (e.target) {
+                        if (e.target.type == "circle") {
+                            onStarDeselect(e);
+                        } else if (e.target.type == "line") {
+                            onLineDeselect(e);
+                        }
+                    }
+                },
+                "object:moving": e => {
+                    if (e.target && e.target.type == "circle") {
+                        onStarMove(e);
+                    }
+                }
             });
 
             canvas.requestRenderAll();
@@ -584,7 +585,7 @@
 
             canvas.on({
                 "mouse:down": e => {
-                    var line;
+                    var tmpLine;
                     var startStar;
 
                     if (e.target) {
@@ -593,35 +594,35 @@
                         var x = center.x - t2;
                         var y = center.y - t2;
                         var coords = [x, y, x, y];
-                        line = new fabric.Line(coords, {
+                        tmpLine = new fabric.Line(coords, {
                             evented: false,
                             selectable: false,
                             stroke: gid("attribute-color2").value,
                             strokeWidth: t2
                         });
-                        canvas.add(line);
-                        canvas.sendToBack(line);
+                        canvas.add(tmpLine);
+                        canvas.sendToBack(tmpLine);
                         startStar = e.target;
                         canvas.requestRenderAll();
                     }
 
                     canvas.on({
                         "mouse:move": e => {
-                            if (line) {
-                                var t2 = line.strokeWidth;
-                                line.set({ 'x2': e.absolutePointer.x - t2, 'y2': e.absolutePointer.y - t2 });
+                            if (tmpLine) {
+                                var t2 = tmpLine.strokeWidth;
+                                tmpLine.set({ 'x2': e.absolutePointer.x - t2, 'y2': e.absolutePointer.y - t2 });
                                 canvas.renderAll();
                             }
                         },
                         "mouse:up": e => {
-                            if (e.target && line) {
+                            if (e.target && tmpLine) {
                                 var realLine = makeLine(startStar, e.target);
                                 canvas.add(realLine);
                                 canvas.sendToBack(realLine);
                             }
 
-                            canvas.remove(line);
-                            line = null;
+                            canvas.remove(tmpLine);
+                            tmpLine = null;
                             startStar = null;
                             canvas.off("mouse:move");
                             canvas.off("mouse:up");
@@ -642,18 +643,24 @@
 
             _stars.forEach(star => {
                 star.selectable = true;
-                star.on({
-                    "selected": deleteStarEvent,
-                });
             });
 
             _lines.forEach(line => {
                 line.evented = true;
                 line.selectable = true;
-                line.on({
-                    "selected": deleteLineEvent
-                });
             });
+
+            canvas.on({
+                "selection:created": e => {
+                    if (e.target) {
+                        if (e.target.type == "circle") {
+                            deleteStarEvent(e);
+                        } else if (e.target.type == "line") {
+                            deleteLineEvent(e);
+                        }
+                    }
+                }
+            })
 
             canvas.requestRenderAll();
         }
