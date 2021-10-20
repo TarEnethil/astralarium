@@ -11,6 +11,7 @@ A small, work-in-progress, offline<sup>1</sup> editor for custom star maps and c
 
 ### Maybe
 * constellation tracking
+* add star shadow (color, blur, per-star?)
 * add text tool
 * optionally display star / constellation name
 
