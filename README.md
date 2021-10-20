@@ -11,7 +11,6 @@ A small, work-in-progress, offline<sup>1</sup> editor for custom star maps and c
 
 ### Maybe
 * constellation tracking
-* add star shadow (color, blur, per-star?)
 * add text tool
 * optionally display star / constellation name
 
@@ -23,5 +22,5 @@ A small, work-in-progress, offline<sup>1</sup> editor for custom star maps and c
 ## Premade Backgrounds
 * Background 1: ["Cluster of Stars" by Kai Pilger from Pexels](https://www.pexels.com/photo/cluster-of-stars-1341279/)
 * Background 2: Photo by [Andy Holmes](https://unsplash.com/@andyjh07?) on [unsplash](https://unsplash.com/wallpapers/nature/star)
-* Background 3: Photo by [Jeremy Perkins](https://unsplash.com/@jeremyperkins)] on [unsplash](https://unsplash.com/wallpapers/nature/star)
+* Background 3: Photo by [Jeremy Perkins](https://unsplash.com/@jeremyperkins) on [unsplash](https://unsplash.com/wallpapers/nature/star)
 * Background 4: Photo by [Graham Holtshausen](https://unsplash.com/@freedomstudios) on [unsplash](https://unsplash.com/wallpapers/nature/star)

@@ -475,6 +475,24 @@
         });
     }
 
+    gid("use-shadows").oninput = () => {
+        if (gid("use-shadows").checked) {
+            _stars.forEach(star => {
+                star.shadow = new fabric.Shadow({
+                    color: star.fill,
+                    blur: 10,
+                    includeDefaultValues: false
+                });
+            });
+        } else {
+            _stars.forEach(star => {
+                star.shadow = null;
+            });
+        }
+
+        canvas.renderAll();
+    }
+
     setupPopup("canvas");
     setupPopup("save");
     setupPopup("background");
@@ -765,7 +783,11 @@
             setupAttributePanel(cfg);
 
             observe(e.target, "attribute-name", "name")
-            observe(e.target, "attribute-color1", "fill");
+            observe(e.target, "attribute-color1", "fill", () => {
+                if (e.target.shadow) {
+                    e.target.shadow.color = gid("attribute-color1").value;
+                }
+            });
             observe(e.target, "attribute-color2", "stroke");
             observeInt(e.target, "attribute-size", "radius", () => {
                 // recalculate line centers when changing size
@@ -897,13 +919,18 @@
         });
     }
 
-    function observe(elem, id, property) {
+    function observe(elem, id, property, func) {
         var el = document.getElementById(id);
 
         el.value = elem[property];
         el.oninput = function() {
             elem.set(property, this.value);
             elem.setCoords();
+
+            if (func) {
+                func();
+            }
+
             canvas.renderAll();
         }
     }
@@ -964,8 +991,16 @@
             radius: size,
             fill: fill,
             stroke: stroke,
-            includeDefaultValues: false
+            includeDefaultValues: false,
         });
+
+        if (gid("use-shadows").checked) {
+            star.shadow = new fabric.Shadow({
+                color: fill,
+                blur: 10,
+                includeDefaultValues: false
+            });
+        }
 
         star.name = name;
         star.uuid = uuidv4();
