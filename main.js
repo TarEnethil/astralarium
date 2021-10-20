@@ -12,6 +12,18 @@
     var LINE_MIN_SIZE = 1;
     var LINE_MAX_SIZE = 5;
 
+    rando = fabric.util.getRandomInt;
+
+    // global map of stars (uuid => fabric.Circle)
+    var _stars = new Map();
+    // global map of lines (uuid => fabric.Line)
+    var _lines = new Map();
+
+    // global current mode
+    var _mode;
+
+    // stores the values of the attribute panel when leaving Add mode
+    // contains default values for the first enterAddMode()
     var _starAttributeCache = {
         name: {
             value: "Unnamed Star",
@@ -35,16 +47,22 @@
         }
     };
 
+    // stores the values of the attribute panel when leaving Line mode
+    // contains default values for the first enterLineMode()
     var _lineAttributeCache = {
+        // lines don't have a name -> disable
         name: {
             value: "disabled",
             disabled: true
         },
+        // lines only have one color -> disable
         color1: {
             value: "#cccccc",
             disabled: true,
             tooltip: "disabled"
         },
+        // color2 + size looks better than color1 + size
+        // because a disabled (=invisible) color2 leaves a big gap
         color2: {
             value: "#ffffff",
             disabled: false,
@@ -58,13 +76,7 @@
         }
     };
 
-    rando = fabric.util.getRandomInt;
-
-    var _stars = new Map();
-    var _lines = new Map();
-
-    var _mode;
-
+    // set up hotkeys
     document.addEventListener('keyup', e => {
         if (e.key == 'n') {
             gid("button-canvas").click();
@@ -98,30 +110,23 @@
         });
     });
 
-    gid("mode-star-add").addEventListener("click", e => {
-        e.preventDefault();
-        document.activeElement.blur();
-        enterAddMode();
-    });
+    // set up onclick listeners for mode buttons
+    function setupModeListener(mode, func) {
+        gid("mode-star-" + mode).addEventListener("click", e => {
+            e.preventDefault();
+            document.activeElement.blur();
+            func();
+        });
+    }
 
-    gid("mode-star-edit").addEventListener("click", e => {
-        e.preventDefault();
-        document.activeElement.blur();
-        enterEditMode();
-    });
+    setupModeListener("add", enterAddMode);
+    setupModeListener("edit", enterEditMode);
+    setupModeListener("line", enterLineMode);
+    setupModeListener("delete", enterDeleteMode);
 
-    gid("mode-star-line").addEventListener("click", e => {
-        e.preventDefault();
-        document.activeElement.blur();
-        enterLineMode();
-    });
-
-    gid("mode-star-delete").addEventListener("click", e => {
-        e.preventDefault();
-        document.activeElement.blur();
-        enterDeleteMode();
-    });
-
+    // returns the content of the attribute panel in a storable format
+    // disabled and tooltip are attributes of the parent element (li)
+    // disabled actually means visibility:hidden
     function saveAttributePanel() {
         var panelcfg = {
             name: {},
@@ -153,6 +158,8 @@
         return panelcfg;
     }
 
+    // restore the content of the attribute panel from a previous config
+    // disabled actually means visibility:hidden
     function setupAttributePanel(panelcfg) {
         if (panelcfg.name) {
             var field = gid("attribute-name");
@@ -247,6 +254,7 @@
         }
     }
 
+    // set of popup listeners (open and close button)
     function setupPopup(id) {
         gid("button-" + id).addEventListener("click", e => {
             e.preventDefault();
@@ -259,10 +267,12 @@
         });
     }
 
+    // close a popup by id
     function closePopup(id) {
         gid("popup-" + id).style.display = "none";
     }
 
+    // close all popups
     function closePopups() {
         closePopup("canvas");
         closePopup("save");
@@ -270,24 +280,32 @@
         closePopup("info");
     }
 
+    // open a popup by id
     function openPopup(id) {
         resetMode();
 
-        closePopup("canvas");
-        closePopup("save");
-        closePopup("background");
-        closePopup("info");
+        closePopups();
 
         gid("popup-" + id).style.display = "block";
 
         document.activeElement.blur();
     }
 
+    setupPopup("canvas");
+    setupPopup("save");
+    setupPopup("background");
+    setupPopup("info");
+
+    // update the "number of stars" label once after loading
     gid("new-num-stars-label").innerHTML = gid("new-num-stars").value;
+
+    // set up listener for "number of stars" label
     gid("new-num-stars").oninput = () => {
         gid("new-num-stars-label").innerHTML = gid("new-num-stars").value;
     };
 
+    // clear all elements and backgrounds from the canvas
+    // if keepBackground is true, don't delete it
     function clearCanvas(keepBackground) {
         // remove with getObject() instead of clear(), this keeps the background image
         canvas.remove(...canvas.getObjects());
@@ -303,6 +321,8 @@
         updateCounters();
     }
 
+    // add X stars to the canvas
+    // if newCanvas is true, clear the canvas first
     function addStarsToCanvas(newCanvas) {
         gid("new-canvas-create").setAttribute("aria-busy", true);
 
@@ -327,21 +347,25 @@
         canvas.requestRenderAll();
     }
 
+    // popup canvas: button "New Canvas"
     gid("new-canvas-create").addEventListener("click", e => {
         e.preventDefault();
 
         addStarsToCanvas(true);
     });
 
+    // popup canvas: button "Add to Canvas"
     gid("new-canvas-add").addEventListener("click", e => {
         e.preventDefault();
 
         addStarsToCanvas(false);
     });
 
+    // popup canvas: button "Clear Lines"
     gid("new-canvas-delete-lines").addEventListener("click", e => {
         e.preventDefault();
 
+        // don't iterate over _lines, because we would delete elements from it while iterating
         var lines = canvas.getObjects("line");
         lines.forEach(line => {
             deleteLine(line.uuid);
@@ -350,12 +374,15 @@
         updateCounters();
     });
 
+    // popup canvas: button "Clear Canvas"
     gid("new-canvas-delete").addEventListener("click", e => {
         e.preventDefault();
 
         clearCanvas(false);
     });
 
+    // popup canvas: button "Load Canvas"
+    // clear the canvas and load canvas data from a JSON string
     gid("load-canvas-from-data").addEventListener("click", e => {
         gid("load-canvas-from-data").setAttribute("aria-busy", true);
 
@@ -367,6 +394,9 @@
         canvas.renderOnAddRemove = false;
 
         if (data != undefined && data != '') {
+            // third param is a function (j, o) that is called for each added object
+            // j is the json, o is the fabric.Object
+            // we use this for the additional setup for stars and lines
             canvas.loadFromJSON(data, canvas.renderAll.bind(canvas), (j, o) => {
                 if (o.type == "circle") {
                     setupStar(o);
@@ -390,6 +420,8 @@
         canvas.renderOnAddRemove = true;
     });
 
+    // helper function to trigger a download of a generated blob
+    // by adding a link to the document  and clicking it
     function triggerDownload(name, url) {
         var link = document.createElement('a');
         link.download = name;
@@ -399,6 +431,7 @@
         document.body.removeChild(link);
     }
 
+    // popup save: button "Export as PNG"
     gid("export-png").addEventListener("click", e => {
         var dataURL = canvas.toDataURL({
              width: canvas.width,
@@ -411,6 +444,7 @@
         triggerDownload("image.png", dataURL);
     });
 
+    // popup save: button "Export as SVG"
     gid("export-svg").addEventListener("click", e => {
         var dataURL = canvas.toSVG({
              width: canvas.width,
@@ -423,6 +457,7 @@
         triggerDownload("image.svg", localURL);
     });
 
+    // popup save: button "Export as JSON"
     gid("export-json").addEventListener("click", e => {
         var data =  JSON.stringify(canvas);
 
@@ -432,6 +467,7 @@
         triggerDownload("stars.json", localURL);
     });
 
+    // popup background: button "Delete Background"
     gid("button-delete-background").addEventListener("click", e => {
         e.preventDefault();
 
@@ -442,15 +478,19 @@
         closePopup("background");
     });
 
+    // change background color when a color is selected
     gid("background-color").oninput = () => {
         canvas.backgroundColor = gid("background-color").value;
         canvas.requestRenderAll();
-        closePopup("background");
     };
 
+    // set the opacity label once after loading
     gid("background-opacity-label").innerHTML = gid("background-opacity").value;
+
+    // change background image opacity when the slider is moved
     gid("background-opacity").oninput = () => {
         var opacity = parseInt(gid("background-opacity").value, 10);
+        // update the label too
         gid("background-opacity-label").innerHTML = opacity;
 
         if (canvas.backgroundImage) {
@@ -459,6 +499,32 @@
         }
     }
 
+    // load an image from a URL and set it as the background image of the canvas
+    function loadBackground(url, button_id) {
+        var b = gid(button_id);
+        b.setAttribute("aria-busy", true);
+
+        fabric.Image.fromURL(url, imgObj => {
+            var opts = { opacity: gid("background-opacity").value / 100.0,
+                         originX: 'left',
+                         originY: 'top',
+                         crossOrigin: true }; // crossOrigin needed, so it can be saved/loaded
+
+            // fit image to canvas if wanted
+            if (gid("background-stretch").checked) {
+                opts.scaleX = canvas.width / imgObj.width;
+                opts.scaleY = canvas.height / imgObj.height;
+            }
+
+            canvas.setBackgroundImage(imgObj, canvas.renderAll.bind(canvas), opts);
+
+            b.removeAttribute("aria-busy");
+            gid("popup-background").style.display = "none";
+        }, { crossOrigin: true }); // crossOrigin needed, so image can be saved/loaded
+    }
+
+    // popup background: button "Load Image"
+    // load a background image from a custom url
     gid("button-url-background").addEventListener("click", e => {
         var v = gid("background-url").value;
 
@@ -467,21 +533,24 @@
         }
     });
 
+    // set up click listeners for all premade images
     var images = document.getElementsByClassName("background-gallery-image");
     for (var i = 0; i < images.length; i++) {
         images[i].addEventListener("click", e => {
+            // remove /thumb from the URL and load image
             var url = e.target.src.replace(/\/thumb/, "");
             loadBackground(url, "premade-background-spinner");
         });
     }
 
+    // popup info: Checkbox "Use Star Shadows"
     gid("use-shadows").oninput = () => {
         if (gid("use-shadows").checked) {
             _stars.forEach(star => {
                 star.shadow = new fabric.Shadow({
                     color: star.fill,
                     blur: 10,
-                    includeDefaultValues: false
+                    includeDefaultValues: false // less export when saving as JSON
                 });
             });
         } else {
@@ -493,38 +562,13 @@
         canvas.renderAll();
     }
 
-    setupPopup("canvas");
-    setupPopup("save");
-    setupPopup("background");
-    setupPopup("info");
-
+    // update the counters shown in the info popup
     function updateCounters() {
         gid("num-stars").innerHTML = _stars.size;
         gid("num-lines").innerHTML = _lines.size;
     }
 
-    function loadBackground(url, button_id) {
-        var b = gid(button_id);
-        b.setAttribute("aria-busy", true);
-
-        fabric.Image.fromURL(url, imgObj => {
-            var opts = { opacity: gid("background-opacity").value / 100.0,
-                         originX: 'left',
-                         originY: 'top',
-                         crossOrigin: true };
-
-            if (gid("background-stretch").checked) {
-                opts.scaleX = canvas.width / imgObj.width;
-                opts.scaleY = canvas.height / imgObj.height;
-            }
-
-            canvas.setBackgroundImage(imgObj, canvas.renderAll.bind(canvas), opts);
-
-            b.removeAttribute("aria-busy");
-            gid("popup-background").style.display = "none";
-        }, { crossOrigin: true });
-    }
-
+    // reset everything mode-related, to the next mode can start from a clean slate
     function resetMode() {
         // save current values of attribute panel, so it can be restored when reentering add mode
         if (_mode == "add") {
@@ -543,10 +587,13 @@
         gid("mode-star-line").classList.remove('active-mode');
         gid("mode-star-delete").classList.remove('active-mode');
 
+        // discard canvas seletion
         canvas.discardActiveObject();
 
+        // hide attribute panel
         gid("attribute-panel").style.visibility = "hidden";
 
+        // reset all canvas listeners
         canvas.off("mouse:up");
         canvas.off("mouse:down");
         canvas.off("selection:created");
@@ -565,6 +612,7 @@
         });
     }
 
+    // generic function to set a mode
     function setMode(mode) {
         closePopups();
 
@@ -572,11 +620,14 @@
         gid("mode-star-" + mode).classList.add("active-mode");
     }
 
+    // addMode is used to add Stars to the canvas
+    // the look of the stars is controlled by the attribute panel
     function enterAddMode() {
         if (_mode != "add") {
             resetMode();
             setMode("add");
 
+            // load stored attributes from last add Mode (or default for first time)
             setupAttributePanel(_starAttributeCache);
             gid("attribute-panel").style.visibility = "visible";
 
@@ -588,6 +639,7 @@
         }
     }
 
+    // editMode is used to edit star or line properties or to move stars
     function enterEditMode() {
         if (_mode != "edit") {
             resetMode();
@@ -602,8 +654,11 @@
                 line.selectable = true;
             });
 
+            // save last move event for async rendering
             var lastMoveEvent;
 
+            // async (?) frame method, so we don't render every frame while moving an object
+            // call onStarMove with the stored move event
             function frame() {
                 if (lastMoveEvent) {
                     onStarMove(lastMoveEvent);
@@ -622,6 +677,19 @@
                         }
                     }
                 },
+                // :created is only called when nothing was previously selected
+                // this way, the attributePanels are set up correctly when directly
+                // switching from editing a star to a line (or vice versa)
+                "selection:updated": e => {
+                    if (e.target) {
+                        if (e.target.type == "circle") {
+                            onStarSelect(e);
+                        } else if (e.target.type == "line") {
+                            onLineSelect(e);
+                        }
+                    }
+                },
+                // use before: so that we actually know which element the selection was cleared from
                 "before:selection:cleared": e => {
                     if (e.target) {
                         if (e.target.type == "circle") {
@@ -632,6 +700,8 @@
                     }
                 },
                 "mouse:up": e => {
+                    // delete lastMoveEvent when the mouse is released,
+                    // which stops frame from calling requestAnimFrame()
                     lastMoveEvent = null;
                 },
                 "object:moving": e => {
@@ -647,6 +717,8 @@
         }
     }
 
+    // lineMode is used to draw lines between stars
+    // the look of the lines is controlled via the attribute panel
     function enterLineMode() {
         if (_mode != "line") {
             resetMode();
@@ -657,12 +729,14 @@
 
             canvas.on({
                 "mouse:down": e => {
-                    var tmpLine;
-                    var t2;
-                    var mouse;
-                    var startStar;
+                    var tmpLine; // stores the line that is drawn from the start to the cursor
+                    var t2; // store thickness of the line (used for coordinate correction)
+                    var mouse; // last known mouse position (for async rendering)
+                    var startStar; // star which the temporary line is starting from
 
                     if (e.target) {
+                        // if a star is clicked, create a temporary line that originates at the clicked
+                        // star and runs to the mouse pointer
                         var center = e.target.getCenterPoint();
                         t2 = parseInt(gid("attribute-size").value, 10);
                         var x = center.x - t2;
@@ -684,6 +758,7 @@
                         frame();
                     }
 
+                    // async (?) function that updates the temporary line to the last known mouse coordinates
                     function frame() {
                         if (tmpLine) {
                             tmpLine.set({ 'x2': mouse.x - t2, 'y2': mouse.y - t2 });
@@ -694,15 +769,19 @@
 
                     canvas.on({
                         "mouse:move": e => {
+                            // store mouse position for async rendering
                             mouse = e.absolutePointer;
                         },
                         "mouse:up": e => {
                             if (e.target && tmpLine) {
+                                // draw the real line if the mouse was released on another star
                                 var realLine = makeLine(startStar, e.target);
                                 canvas.add(realLine);
                                 canvas.sendToBack(realLine);
                             }
 
+                            // delete the temporary line and reset state
+                            // regardless of if a real line was drawn
                             canvas.remove(tmpLine);
                             tmpLine = null;
                             startStar = null;
@@ -719,6 +798,7 @@
         }
     }
 
+    // deleteMode is used to delete stars and lines
     function enterDeleteMode() {
         if (_mode != "delete") {
             resetMode();
@@ -749,67 +829,73 @@
         }
     }
 
+    // generate a somewhat random uuid
+    // generously taken from stackoverflow
     function uuidv4() {
       return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
         (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
       );
     }
 
+    // the name says it all
     function updateAttributeSizeTooltip() {
         gid("attribute-size-label").setAttribute("data-tooltip", "Size: " + gid("attribute-size").value);
     }
 
+    // setup and show attribute panel when a star was clicked in edit mode
     function onStarSelect(e) {
-        if (_mode == "edit") {
-            var cfg = {
-                name: {
-                    disabled: false
-                },
-                color1: {
-                    disabled: false,
-                    tooltip: "Inner Star Color"
-                },
-                color2: {
-                    disabled: false,
-                    tooltip: "Outer Star Color",
-                },
-                size: {
-                    disabled: false,
-                    min: STAR_MIN_SIZE,
-                    max: STAR_MAX_SIZE
-                }
-            };
+        // TODO: why not lost _starAttributeCache here?
+        // all necessary values will be set by observe() anyway
+        var cfg = {
+            name: {
+                disabled: false
+            },
+            color1: {
+                disabled: false,
+                tooltip: "Inner Star Color"
+            },
+            color2: {
+                disabled: false,
+                tooltip: "Outer Star Color",
+            },
+            size: {
+                disabled: false,
+                min: STAR_MIN_SIZE,
+                max: STAR_MAX_SIZE
+            }
+        };
 
-            setupAttributePanel(cfg);
+        setupAttributePanel(cfg);
 
-            observe(e.target, "attribute-name", "name")
-            observe(e.target, "attribute-color1", "fill", () => {
-                if (e.target.shadow) {
-                    e.target.shadow.color = gid("attribute-color1").value;
-                }
-            });
-            observe(e.target, "attribute-color2", "stroke");
-            observeInt(e.target, "attribute-size", "radius", () => {
-                // recalculate line centers when changing size
-                updateLines(e.target);
-                updateAttributeSizeTooltip();
-                canvas.requestRenderAll();
-            });
+        observe(e.target, "attribute-name", "name")
+        observe(e.target, "attribute-color1", "fill", () => {
+            // update shadow color too, if present
+            if (e.target.shadow) {
+                e.target.shadow.color = gid("attribute-color1").value;
+            }
+        });
+        observe(e.target, "attribute-color2", "stroke");
+        observeInt(e.target, "attribute-size", "radius", () => {
+            // recalculate line centers when changing size
+            updateLines(e.target);
             updateAttributeSizeTooltip();
-            gid("attribute-panel").style.visibility = "visible";
-        }
+            canvas.requestRenderAll();
+        });
+        updateAttributeSizeTooltip();
+        gid("attribute-panel").style.visibility = "visible";
     }
 
+    // hide and deactivate attribute panel when a star was deselected in edit mode
     function onStarDeselect(e) {
-        if (_mode == "edit") {
-            gid("attribute-panel").style.visibility = "hidden";
-            unobserve("attribute-name");
-            unobserve("attribute-color1");
-            unobserve("attribute-color2");
-            unobserve("attribute-size");
-        }
+        gid("attribute-panel").style.visibility = "hidden";
+        unobserve("attribute-name");
+        unobserve("attribute-color1");
+        unobserve("attribute-color2");
+        unobserve("attribute-size");
     }
 
+    // update a line start and end points (from the lines perspective)
+    // TODO: maybe put together with updateLines() ?
     function recalculateLinePoints(line) {
         var from = _stars.get(line.from).getCenterPoint();
         var to = _stars.get(line.to).getCenterPoint();
@@ -821,7 +907,10 @@
         canvas.renderAll();
     }
 
+    // setup and show attribute panel when a line was clicked in edit mode
     function onLineSelect(e) {
+        // TODO: why not lost _lineAttributeCache here?
+        // all necessary values will be set by observe() anyway
         var cfg = {
             name: {
                 value: "disabled",
@@ -846,6 +935,7 @@
 
         observe(e.target, "attribute-color2", "stroke");
         observeInt(e.target, "attribute-size", "strokeWidth", () => {
+            // update the line coordinates when chaging size
             recalculateLinePoints(e.target);
             updateAttributeSizeTooltip();
         });
@@ -854,16 +944,19 @@
         gid("attribute-panel").style.visibility = "visible";
     }
 
+    // hide and deactivate attribute panel when a line was deselected in edit mode
     function onLineDeselect(e) {
         gid("attribute-panel").style.visibility = "hidden";
         unobserve("attribute-color2");
         unobserve("attribute-size");
     }
 
+    // update the coordinates of all lines originating or running to this star
     function onStarMove(e) {
         updateLines(e.transform.target);
     }
 
+    // delete a star from the canvas and internal data structures
     function deleteStarEvent(e) {
         var star = e.target;
 
@@ -885,11 +978,13 @@
         updateCounters();
     }
 
+    // delete a clicked line
     function deleteLineEvent(e) {
         deleteLine(e.target.uuid);
         updateCounters();
     }
 
+    // delete a line by uuid from the canvas and internal data structures
     function deleteLine(uuid) {
         var line = _lines.get(uuid);
 
@@ -903,6 +998,7 @@
         canvas.remove(line);
     }
 
+    // update the coordinate of all lines originating from or running to a star
     function updateLines(e) {
         var c = e.getCenterPoint();
 
@@ -919,10 +1015,16 @@
         });
     }
 
+    // observe an input field and tie it to a property of a fabric.Object
+    // if set, func will be executed after the element property is set
     function observe(elem, id, property, func) {
+        // get the input field
         var el = document.getElementById(id);
 
+        // set the initial value of the input field to the element property
         el.value = elem[property];
+
+        // set the element property if the input field is changed
         el.oninput = function() {
             elem.set(property, this.value);
             elem.setCoords();
@@ -935,10 +1037,16 @@
         }
     }
 
+    // observe an input field and tie it to a property of a fabric.Object, while casting the value to Int
+    // if set, func will be executed after the element property is set
     function observeInt(elem, id, property, func) {
+        // get the input field
         var el = document.getElementById(id);
 
+        // set the initial value of the input field to the element property
         el.value = elem[property];
+
+        // set the element property if the input field is changed
         el.oninput = function() {
             elem.set(property, parseInt(this.value, 10));
             elem.setCoords();
@@ -951,14 +1059,19 @@
         }
     }
 
+    // remove the oninput function from an input field
     function unobserve(id) {
         document.getElementById(id).oninput = function(){};
     }
 
+    // set up additional star attributes
+    // this function is called for each new star, as well as all stars that are loaded
     function setupStar(star) {
+        // sensible defaults
         star.hasControls = false;
         star.selectable = false;
 
+        // add name, uuid, lines_from and lines_to to JSON export
         star.toObject = (function(toObject) {
           return function() {
             return fabric.util.object.extend(toObject.call(this), {
@@ -970,9 +1083,12 @@
           };
         })(star.toObject);
 
+        // add to global map
         _stars.set(star.uuid, star);
     }
 
+    // make and return a new star according to coordinats [left, top] and additional opts
+    // this function is only called for newly added stars
     function makeStar(left, top, opts) {
         var size = ("size" in opts ? opts.size : STAR_DEFAULT_SIZE);
         var fill = ("fill" in opts ? opts.fill : "#ffffff");
@@ -991,7 +1107,7 @@
             radius: size,
             fill: fill,
             stroke: stroke,
-            includeDefaultValues: false,
+            includeDefaultValues: false, // less export when saving to JSON
         });
 
         if (gid("use-shadows").checked) {
@@ -1015,13 +1131,17 @@
         return star;
     }
 
+    // set up additional line attributes
+    // this function is called for each new line, as well as all lines that are loaded
     function setupLine(line) {
+        // sensible defaults
         line.selectable = false;
         line.evented = false;
         line.lockMovementX = true;
         line.lockMovementY = true;
         line.hasControls = false;
 
+        // add uuid, from and to to JSON export
         line.toObject = (function(toObject) {
           return function() {
             return fabric.util.object.extend(toObject.call(this), {
@@ -1032,9 +1152,12 @@
           };
         })(line.toObject);
 
+        // add to global map
         _lines.set(line.uuid, line);
     }
 
+    // make and return a line from one star to another
+    // only called for new lines
     function makeLine(from, to) {
         var thickness = parseInt(gid("attribute-size").value, 10);
         var t2 = thickness / 2;
@@ -1045,7 +1168,7 @@
         var line = new fabric.Line(coords, {
             stroke: gid("attribute-color2").value,
             strokeWidth: thickness,
-            includeDefaultValues: false
+            includeDefaultValues: false // less data when saving to JSON
         });
 
         line.uuid = uuidv4();
@@ -1053,6 +1176,7 @@
         line.from = from.uuid;
         line.to = to.uuid;
 
+        // add uuid to respective stars
         from.lines_from.push(line.uuid);
         to.lines_to.push(line.uuid);
 
@@ -1063,6 +1187,7 @@
         return line;
     }
 
+    // return a randomly generated star, according to the settings in the canvas popup
     function makeRandomStar() {
         var min = parseInt(gid("new-min-size").value, 10);
         var max = parseInt(gid("new-max-size").value, 10);
@@ -1075,9 +1200,11 @@
             stroke: outerC
         };
 
+        // PADDING should prevent stars from clipping outside of the canvas
         return makeStar(rando(PADDING, CANVAS_WIDTH-PADDING), rando(PADDING, CANVAS_HEIGHT-PADDING), opts);
     }
 
+    // make and return a star at the position of a click event
     function makeStarFromEvent(e) {
         if (e.target == null || e.target == undefined) {
             var opts = {
@@ -1094,6 +1221,7 @@
         }
     }
 
+    // initialize the canvas with some defaults
     var canvas = this.__canvas = new fabric.Canvas('star-map', {
         width: CANVAS_WIDTH,
         height: CANVAS_HEIGHT,
@@ -1101,5 +1229,6 @@
         selection: false
     });
 
+    // finally: open canvas popup
     gid("button-canvas").click();
 })();
