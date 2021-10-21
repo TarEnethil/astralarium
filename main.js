@@ -704,15 +704,21 @@
                     lastMoveEvent = null;
                 },
                 "object:moving": e => {
+                    // need to call frame() if this is the first move event
+                    var start = !lastMoveEvent;
+
                     if (e.target && e.target.type == "circle") {
                         lastMoveEvent = e;
+                    }
+
+                    // call frame after lastMoveEvent is set, so that frame() will go into recursion
+                    if (start) {
+                        frame();
                     }
                 }
             });
 
             canvas.requestRenderAll();
-
-            frame();
         }
     }
 
