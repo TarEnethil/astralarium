@@ -36,6 +36,13 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M4.828 21l-.02.02-.021-.02H2.992A.993.993 0 0 1 2 20.007V3.993A1 1 0 0 1 2.992 3h18.016c.548 0 .992.445.992.993v16.014a1 1 0 0 1-.992.993H4.828zM20 15V5H4v14L14 9l6 6zm0 2.828l-6-6L6.828 19H20v-1.172zM8 11a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
                 </a>
             </li>
+            <li>
+                <a href="" id="button-random" data-tooltip="Random Constellations [r]">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M 3,3 V 20.990234 H 21 V 3 Z M 4.9980469,5.0273438 H 19.003906 V 19.013672 H 4.9980469 Z M 16.046875,6.4921875 A 1.459933,1.459933 0 0 0 14.587891,7.953125 1.459933,1.459933 0 0 0 16.046875,9.4121094 1.459933,1.459933 0 0 0 17.507812,7.953125 1.459933,1.459933 0 0 0 16.046875,6.4921875 Z m -4.052734,4.0410155 a 1.459933,1.459933 0 0 0 -1.458985,1.460938 1.459933,1.459933 0 0 0 1.458985,1.458984 1.459933,1.459933 0 0 0 1.460937,-1.458984 1.459933,1.459933 0 0 0 -1.460937,-1.460938 z M 7.96875,14.541016 A 1.459933,1.459933 0 0 0 6.5097656,16.001953 1.459933,1.459933 0 0 0 7.96875,17.460938 1.459933,1.459933 0 0 0 9.4296875,16.001953 1.459933,1.459933 0 0 0 7.96875,14.541016 Z" />
+                    </svg>
+                </a>
+            </li>
             <li></li>
             <li></li>
             <li>
@@ -267,7 +274,79 @@
             </article>
         </div>
 
-         <div class="popup container" id="popup-info">
+        <div class="popup container" id="popup-random">
+            <article>
+                <header>
+                    <h5>Random Constellations (Experimental)</h5>
+
+                    <a href="" id="close-random-popup" class="close-button">
+                        <!-- remixicon "ri-close-circle-line" -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-9.414l2.828-2.829 1.415 1.415L13.414 12l2.829 2.828-1.415 1.415L12 13.414l-2.828 2.829-1.415-1.415L10.586 12 7.757 9.172l1.415-1.415L12 10.586z"/></svg>
+                    </a>
+                </header>
+
+                <div class="grid">
+                    <div>
+                        <label for="cluster-line-color">
+                            Line Color
+                            <input type="color" id="cluster-line-color" value="#ffffff" />
+                        </label>
+
+                        <label for="cluster-line-width">
+                            Line Thickness (<span id="cluster-line-width-label"></span>)
+                            <input type="range" min="1" max="5" value="2" id="cluster-line-width" name="cluster-line-width" />
+                        </label>
+
+                        <label for="cluster-min-size" data-tooltip="Min Size for Constellation Stars">
+                            Min Star Size (<span id="cluster-min-size-label"></span>)
+                            <input type="range" min="2" max="9" value="3" id="cluster-min-size" name="cluster-min-size" />
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="cluster-num-clusters" data-tooltip="Target value; depends on Stars">
+                            Number of Clusters
+                            <input type="number" value="3" id="cluster-num-clusters" name="cluster-num-clusters" min="1" />
+                        </label>
+
+                        <label for="cluster-min-members" data-tooltip="Target value; depends on Stars">
+                            Min Stars
+                            <input type="number" value="2" id="cluster-min-members" name="cluster-min-members" min="1" />
+                        </label>
+
+                        <label for="cluster-min-dist" data-tooltip="Min Distance between two Constellation Stars">
+                            Min Distance
+                            <input type="number" value="25" id="cluster-min-dist" name="cluster-min-dist" min="10" max="1000" />
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="cluster-max-neighbors" data-tooltip="Max Number of Lines per Constellation Star">
+                            Max Neighbors
+                            <input type="number" value="3" id="cluster-max-neighbors" name="cluster-max-neighbors" min="1" max="10" />
+                        </label>
+
+                        <label for="cluster-max-members" data-tooltip="Max Number of Constellation Stars">
+                            Max Stars
+                            <input type="number" value="7" id="cluster-max-members" name="cluster-max-members" min="1" max="15" />
+                        </label>
+
+                        <label for="cluster-max-dist" data-tooltip="Max Distance between two Constellation Stars">
+                            Max Distance
+                            <input type="number" value="150" id="cluster-max-dist" name="cluster-max-dist" min="50" max="1500" />
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid">
+                    <button id="cluster-new-canvas" data-tooltip="Deletes existing Lines">Replace Old</button>
+                    <button id="cluster-add-canvas" data-tooltip="Add to current Canvas">Add to Canvas</button>
+                    <button id="cluster-single-cluster">Add Single Constellation</button>
+                </div>
+            </article>
+        </div>
+
+        <div class="popup container" id="popup-info">
             <article>
                 <header>
                     <h5>Info and Hotkeys</h5>
@@ -305,6 +384,8 @@
                             <li><strong>n</strong>: Open 'New or Load Canvas' Popup</li>
                             <li><strong>s</strong>: Open 'Save or Export Canvas' Popup</li>
                             <li><strong>b</strong>: Open 'Choose Background' Popup</li>
+                            <li><strong>b</strong>: Open 'Random Constellations' Popup</li>
+                            <li><strong>h</strong>: Open this Popup</li>
                             <li><strong>i</strong>: Enter 'Add Star' Mode</li>
                             <li><strong>e</strong>: Enter 'Edit Star' Mode</li>
                             <li><strong>l</strong>: Enter 'Add Line' Mode</li>
