@@ -519,7 +519,6 @@
             canvas.setBackgroundImage(imgObj, canvas.renderAll.bind(canvas), opts);
 
             b.removeAttribute("aria-busy");
-            gid("popup-background").style.display = "none";
         }, { crossOrigin: true }); // crossOrigin needed, so image can be saved/loaded
     }
 
@@ -1075,6 +1074,7 @@
         // sensible defaults
         star.hasControls = false;
         star.selectable = false;
+        star.hasRotatingPoint = false;
 
         // add name, uuid, lines_from and lines_to to JSON export
         star.toObject = (function(toObject) {
@@ -1145,6 +1145,7 @@
         line.lockMovementX = true;
         line.lockMovementY = true;
         line.hasControls = false;
+        line.hasRotatingPoint = false;
 
         // add uuid, from and to to JSON export
         line.toObject = (function(toObject) {

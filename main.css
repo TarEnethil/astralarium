@@ -101,6 +101,12 @@ main#main {
     border-color: var(--primary-hover);
 }
 
+#premade-background-spinner {
+    text-overflow: ellipsis;
+    white-space:  nowrap;
+    overflow: hidden;
+}
+
 /* pico overrides */
 
 /* make pico tooltip appear on the bottom instead of at the top */
