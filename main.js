@@ -783,11 +783,12 @@
                             }
                         },
                         "mouse:up": e => {
-                            if (e.target && e.target != startStar && tmpLine) {
-                                // draw the real line if the mouse was released on another star
+                            if (e.target && e.target != startStar && !starsAreConnected(e.target, startStar) && tmpLine) {
+                                // draw the real line if the mouse was released on another star, and the stars aren't connected yet
                                 var realLine = makeLine(startStar, e.target);
                                 canvas.add(realLine);
                                 canvas.sendToBack(realLine);
+
                             }
 
                             // delete the temporary line and reset state
@@ -998,11 +999,16 @@
     function deleteLine(uuid) {
         var line = _lines.get(uuid);
 
-        var idx = _stars.get(line.from).lines_from.indexOf(uuid);
-        _stars.get(line.from).lines_from.splice(idx, 1);
+        var from = _stars.get(line.from);
+        var to = _stars.get(line.to);
 
-        idx = _stars.get(line.to).lines_to.indexOf(uuid);
-        _stars.get(line.to).lines_to.splice(idx, 1);
+        var idx = from.lines_from.indexOf(uuid);
+        from.lines_from.splice(idx, 1);
+        from.neighbors.delete(to.uuid);
+
+        idx = to.lines_to.indexOf(uuid);
+        to.lines_to.splice(idx, 1);
+        to.neighbors.delete(from.uuid);
 
         _lines.delete(line.uuid);
         canvas.remove(line);
@@ -1074,6 +1080,10 @@
         document.getElementById(id).oninput = function(){};
     }
 
+    function starsAreConnected(s1, s2) {
+        return s1.neighbors.has(s2.uuid);
+    }
+
     // set up additional star attributes
     // this function is called for each new star, as well as all stars that are loaded
     function setupStar(star) {
@@ -1132,8 +1142,12 @@
         star.name = name;
         star.uuid = uuidv4();
 
+        // TODO: these could be Sets for faster delete? (need to check serialization)
         star.lines_from = [];
         star.lines_to = [];
+
+        // keep track of neighbors, aka stars we have a line to; not exported to JSON
+        star.neighbors = new Set();
 
         setupStar(star);
 
@@ -1163,6 +1177,10 @@
             });
           };
         })(line.toObject);
+
+        // make neighbors known
+        _stars.get(line.from).neighbors.add(line.to);
+        _stars.get(line.to).neighbors.add(line.from);
 
         // add to global map
         _lines.set(line.uuid, line);
