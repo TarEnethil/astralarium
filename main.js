@@ -768,12 +768,17 @@
                     }
 
                     canvas.on({
+                        // set the new endpoint of the line when moving the mouse
                         "mouse:move": e => {
-                            // store mouse position for async rendering
-                            mouse = e.absolutePointer;
+                            // snap to the center if moving over a star
+                            if (e.target && e.target.type == "circle") {
+                                mouse = e.target.getCenterPoint();
+                            } else { // use mouse position otherwise
+                                mouse = e.absolutePointer;
+                            }
                         },
                         "mouse:up": e => {
-                            if (e.target && tmpLine) {
+                            if (e.target && e.target != startStar && tmpLine) {
                                 // draw the real line if the mouse was released on another star
                                 var realLine = makeLine(startStar, e.target);
                                 canvas.add(realLine);
