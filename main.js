@@ -8,7 +8,7 @@
     var STAR_DEFAULT_SIZE = 4;
     var STAR_MIN_SIZE = 2;
     var STAR_MAX_SIZE = 9;
-    var LINE_DEFAULT_SIZE = 1;
+    var LINE_DEFAULT_SIZE = 2;
     var LINE_MIN_SIZE = 1;
     var LINE_MAX_SIZE = 5;
 
@@ -84,6 +84,8 @@
             gid("button-save").click();
         } else if (e.key == 'b') {
             gid("button-background").click();
+        } else if (e.key == 'r') {
+            gid("button-random").click();
         } else if (e.key == 'h') {
             gid("button-info").click();
         } else if (e.key === 'i') {
@@ -277,6 +279,7 @@
         closePopup("canvas");
         closePopup("save");
         closePopup("background");
+        closePopup("random");
         closePopup("info");
     }
 
@@ -294,6 +297,7 @@
     setupPopup("canvas");
     setupPopup("save");
     setupPopup("background");
+    setupPopup("random");
     setupPopup("info");
 
     // update the "number of stars" label once after loading
@@ -365,13 +369,7 @@
     gid("new-canvas-delete-lines").addEventListener("click", e => {
         e.preventDefault();
 
-        // don't iterate over _lines, because we would delete elements from it while iterating
-        var lines = canvas.getObjects("line");
-        lines.forEach(line => {
-            deleteLine(line.uuid);
-        });
-
-        updateCounters();
+        deleteAllLines();
     });
 
     // popup canvas: button "Clear Canvas"
@@ -416,7 +414,7 @@
                 updateLines(star);
             });
 
-            canvas.requestRenderAll();
+            canvas.renderAll();
             gid("load-canvas-from-data").removeAttribute("aria-busy");
             closePopup("canvas");
             updateCounters();
@@ -565,6 +563,235 @@
 
         canvas.renderAll();
     }
+
+    // find a suitable first star to begin a constellation
+    function findConstellationStart() {
+        // filter out all stars that already have neighbors
+        var starArray = Array.from(_stars.values()).filter(s => s.neighbors.size == 0);
+
+        if (starArray.length == 0) {
+            return null;
+        }
+
+        var candidate;
+        var maxTries = 10;
+
+        for (var i = 0; i < maxTries; i++) {
+            // random star from candidates
+            candidate = starArray[rando(0, starArray.length - 1)];
+
+            // must have at least one partner to be considered a good starting point
+            if (generateCandidateList(candidate, []).length == 0) {
+                continue;
+            }
+
+            return candidate;
+        }
+    }
+
+    // find a suitable starting star among the members of a constellation
+    function findNextConstellationStart(members) {
+        var maxNeighbors = parseInt(gid("cluster-max-neighbors").value, 10);
+        var maxTries = 10;
+        var candidate;
+
+        if (members.length == 0) {
+            return null;
+        }
+
+        // try to find a next start node
+        for (var i = 0; i < maxTries; i++) {
+            // choose next start node from current cluster
+            candidate = _stars.get(members[rando(0, members.length - 1)]);
+
+            // don't choose stars with many neighbors
+            if (candidate.neighbors.size < maxNeighbors) {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    // generate an array of suitable candidates to add a connection to
+    // iterates through all nodes and filters our unsuitable nodes based on
+    // distance, neighbors and other factors
+    function generateCandidateList(origin, members) {
+        var minDist = parseInt(gid("cluster-min-dist").value, 10);
+        var maxDist = parseInt(gid("cluster-max-dist").value, 10);
+        var maxNeighbors = parseInt(gid("cluster-max-neighbors").value, 10);
+        var minStarSize = parseInt(gid("cluster-min-size").value, 10);
+
+        var distances = new Array();
+
+        _stars.forEach((star, uuid) => {
+            // don't calculate distance to self
+            if (uuid == origin.uuid) {
+                return;
+            }
+
+            // drop direct neighbors
+            if (starsAreConnected(origin, star)) {
+                return;
+            }
+
+            if (members.indexOf(uuid) != -1) {
+                // drop members with too many connections
+                if (star.neighbors.size > maxNeighbors) {
+                    return;
+                }
+
+                // drop members with 50% chance (more chance for new member)
+                if (rando(0, 1) == 0) {
+                    return;
+                }
+            } else {
+                // don't connect to other constellations
+                if (star.neighbors.size > 0) {
+                    return;
+                }
+            }
+
+            // drop small stars
+            if (star.radius < minStarSize) {
+                return;
+            }
+
+            // distance between the two center points in pixels
+            var distance = origin.getCenterPoint().distanceFrom(star.getCenterPoint());
+
+            // drop stars that are not in the habitable zone
+            if (distance < minDist || distance > maxDist) {
+                return;
+            }
+
+            distances.push([uuid, distance]);
+        });
+
+        // sort by distance, smallest first
+        distances.sort((a, b) => {
+            return a[1] - b[1];
+        });
+
+        return distances;
+    }
+
+    // generate a single constellation on the current canvas
+    function generateConstellation() {
+        var members = new Array();
+        var lastStart = null;
+        // initial starting node
+        var start = findConstellationStart();
+
+        var minMembers = parseInt(gid("cluster-min-members").value, 10);
+        var maxMembers = parseInt(gid("cluster-max-members").value, 10);
+
+        var wantedMembers = rando(minMembers, maxMembers);
+
+        // we might not actually end up with wantedMembers
+        for (var run = 0; run < wantedMembers; run++) {
+            if (run != 0) {
+                // choose next start node from current cluster
+                start = findNextConstellationStart(members);
+
+                // if we would start at the last start again, draw once more
+                // does not completely prevent the "star-topology" issue, but should mitigate it enough
+                if (start == lastStart) {
+                    start = findNextConstellationStart(members);
+                }
+            }
+
+            // no suitable start node, try again next round
+            if (!start) {
+                continue;
+            }
+
+            candidates = generateCandidateList(start, members);
+
+            // no suitable candidates, try again next round
+            if (candidates.length == 0) {
+                continue;
+            }
+
+            // pull random star from candidate list and draw the line
+            var partner = _stars.get(candidates[rando(0, candidates.length - 1)][0]);
+
+            var opts = {
+                size: parseInt(gid("cluster-line-width").value, 10),
+                color: gid("cluster-line-color").value
+            };
+            var line = makeLine(start, partner, opts);
+            canvas.add(line);
+            canvas.sendToBack(line);
+
+            if (members.indexOf(start.uuid) == -1) {
+                members.push(start.uuid);
+            }
+
+            if (members.indexOf(partner.uuid) == -1) {
+                members.push(partner.uuid);
+            }
+
+            lastStart = start;
+        }
+    }
+
+    // generate (at max) num constellations on the current canvas
+    function generateConstellations(num) {
+        // nothing to generate
+        if (_stars.size < 2) {
+            return;
+        }
+
+        canvas.renderOnAddRemove = false;
+
+        for (var i = 0; i < num; i++) {
+            generateConstellation();
+        }
+
+        canvas.renderAll();
+
+        canvas.renderOnAddRemove = true;
+    }
+
+    // update the "Line Thickness" label once after loading
+    gid("cluster-line-width-label").innerHTML = gid("cluster-line-width").value;
+
+    // set up listener for "Line Thickness" label
+    gid("cluster-line-width").oninput = () => {
+        gid("cluster-line-width-label").innerHTML = gid("cluster-line-width").value;
+    };
+
+    // update the "Min Star Size" label once after loading
+    gid("cluster-min-size-label").innerHTML = gid("cluster-min-size").value;
+
+    // set up listener for "Min Star Size" label
+    gid("cluster-min-size").oninput = () => {
+        gid("cluster-min-size-label").innerHTML = gid("cluster-min-size").value;
+    };
+
+    // popup random: Button "Replace Old"
+    gid("cluster-new-canvas").addEventListener("click", e => {
+        e.preventDefault();
+
+        deleteAllLines();
+
+        generateConstellations(gid("cluster-num-clusters").value);
+    });
+
+    // popup random: Button "Add to Canvas"
+    gid("cluster-add-canvas").addEventListener("click", e => {
+        e.preventDefault();
+
+        generateConstellations(gid("cluster-num-clusters").value);
+    });
+
+    // popup random: Button "Add Single Constellation"
+    gid("cluster-single-cluster").addEventListener("click", e => {
+        e.preventDefault();
+
+        generateConstellations(1);
+    });
 
     // update the counters shown in the info popup
     function updateCounters() {
@@ -790,7 +1017,12 @@
                         "mouse:up": e => {
                             if (e.target && e.target != startStar && !starsAreConnected(e.target, startStar) && tmpLine) {
                                 // draw the real line if the mouse was released on another star, and the stars aren't connected yet
-                                var realLine = makeLine(startStar, e.target);
+                                var opts = {
+                                    size: parseInt(gid("attribute-size").value, 10),
+                                    color: gid("attribute-color2").value
+                                };
+
+                                var realLine = makeLine(startStar, e.target, opts);
                                 canvas.add(realLine);
                                 canvas.sendToBack(realLine);
 
@@ -992,6 +1224,22 @@
         canvas.remove(star);
 
         updateCounters();
+    }
+
+    // does what it says
+    function deleteAllLines() {
+        var oldval = canvas.renderOnAddRemove;
+        canvas.renderOnAddRemove = false;
+
+        // don't iterate over _lines, because we would delete elements from it while iterating
+        var lines = canvas.getObjects("line");
+        lines.forEach(line => {
+            deleteLine(line.uuid);
+        });
+
+        updateCounters();
+        canvas.renderAll();
+        canvas.renderOnAddRemove = oldval;
     }
 
     // delete a clicked line
@@ -1201,15 +1449,17 @@
 
     // make and return a line from one star to another
     // only called for new lines
-    function makeLine(from, to) {
-        var thickness = parseInt(gid("attribute-size").value, 10);
+    function makeLine(from, to, opts) {
+        var stroke = ("color" in opts ? opts.color : "#ffffff");
+        var thickness = ("size" in opts ? opts.size : LINE_DEFAULT_SIZE);
+
         var t2 = thickness / 2;
         var c1 = from.getCenterPoint();
         var c2 = to.getCenterPoint();
         // correct coords by half of line width
         var coords = [c1.x - t2, c1.y - t2, c2.x - t2, c2.y - t2];
         var line = new fabric.Line(coords, {
-            stroke: gid("attribute-color2").value,
+            stroke: stroke,
             strokeWidth: thickness,
             includeDefaultValues: false // less data when saving to JSON
         });

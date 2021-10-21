@@ -9,14 +9,14 @@ A small, work-in-progress, offline<sup>1</sup> editor for custom star maps and c
 <sup>1</sup>: An internet connection is needed if you want to load a background image.
 
 ## TODO
-* comment the code
 * improve performance for > 500 stars
-* add 'random constellation' function
 
 ### Maybe
 * constellation tracking
 * add text tool
 * optionally display star / constellation name
+* option to choose constellation starting point
+* pan / zoom on canvas
 
 # References
 * CSS: [pico.css](https://picocss.com/)
