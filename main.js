@@ -401,8 +401,13 @@
                 if (o.type == "circle") {
                     setupStar(o);
                 } else if (o.type == "line") {
-                    setupLine(o);
+                    setupLine(o, false); // don't make neighbors known yet
                 }
+            });
+
+            // not all stars are set up at setupLine, so we need to make the neighbors known afterwards
+            canvas.getObjects("line").forEach(line => {
+                setupNeighbors(line);
             });
 
             canvas.getObjects("circle").forEach(star => {
@@ -1104,6 +1109,9 @@
           };
         })(star.toObject);
 
+        // keep track of neighbors, aka stars we have a line to; not exported to JSON
+        star.neighbors = new Set();
+
         // add to global map
         _stars.set(star.uuid, star);
     }
@@ -1146,9 +1154,6 @@
         star.lines_from = [];
         star.lines_to = [];
 
-        // keep track of neighbors, aka stars we have a line to; not exported to JSON
-        star.neighbors = new Set();
-
         setupStar(star);
 
         updateCounters();
@@ -1156,9 +1161,16 @@
         return star;
     }
 
+    // make neighbors known to each other
+    function setupNeighbors(line) {
+        _stars.get(line.from).neighbors.add(line.to);
+        _stars.get(line.to).neighbors.add(line.from);
+    }
+
     // set up additional line attributes
     // this function is called for each new line, as well as all lines that are loaded
-    function setupLine(line) {
+    // it setNeighbors is true, the stars will be made aware of each other via their neighbors set
+    function setupLine(line, setupNeighbors=true) {
         // sensible defaults
         line.selectable = false;
         line.evented = false;
@@ -1178,9 +1190,10 @@
           };
         })(line.toObject);
 
-        // make neighbors known
-        _stars.get(line.from).neighbors.add(line.to);
-        _stars.get(line.to).neighbors.add(line.from);
+        // optional, not all stars are in the map yet when loading from JSON
+        if (setupNeighbors) {
+            setupNeighbors();
+        }
 
         // add to global map
         _lines.set(line.uuid, line);
@@ -1210,7 +1223,7 @@
         from.lines_from.push(line.uuid);
         to.lines_to.push(line.uuid);
 
-        setupLine(line);
+        setupLine(line, true);
 
         updateCounters();
 
