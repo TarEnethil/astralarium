@@ -1170,7 +1170,7 @@
     // set up additional line attributes
     // this function is called for each new line, as well as all lines that are loaded
     // it setNeighbors is true, the stars will be made aware of each other via their neighbors set
-    function setupLine(line, setupNeighbors=true) {
+    function setupLine(line, setNeighbors=true) {
         // sensible defaults
         line.selectable = false;
         line.evented = false;
@@ -1191,8 +1191,8 @@
         })(line.toObject);
 
         // optional, not all stars are in the map yet when loading from JSON
-        if (setupNeighbors) {
-            setupNeighbors();
+        if (setNeighbors) {
+            setupNeighbors(line);
         }
 
         // add to global map
