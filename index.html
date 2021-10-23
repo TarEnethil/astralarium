@@ -163,8 +163,12 @@
 
                     <div class="right-column">
                         <h6>Load Canvas</h6>
-                        <textarea id="canvas-load-data" placeholder="JSON Data"></textarea>
-                        <button id="load-canvas-from-data">Load Canvas</button>
+                        <label for"=canvas-json-file" id="canvas-json-file-label">
+                            JSON File
+                            <input type="file" id="canvas-json-file" name="canvas-json-file" />
+                        </label>
+
+                        <hr>
 
                         <button id="new-canvas-delete-lines" class="secondary">
                             <!-- remixicon "ri-delete-bin-6-line" -->

@@ -351,6 +351,51 @@
         canvas.requestRenderAll();
     }
 
+    // load the concents from a input[type=file] into the canvas
+    // must be a valid *.json file
+    async function loadFromFile(file) {
+        gid("canvas-json-file-label").setAttribute("aria-busy", true);
+
+        canvas.renderOnAddRemove = false;
+
+        var data = await file.text();
+
+        if (data != undefined && data != '' && file.name.split(".").pop().toLowerCase() == "json") {
+            _stars = new Map();
+            _lines = new Map();
+
+            // third param is a function (j, o) that is called for each added object
+            // j is the json, o is the fabric.Object
+            // we use this for the additional setup for stars and lines
+            canvas.loadFromJSON(data, canvas.renderAll.bind(canvas), (j, o) => {
+                if (o.type == "circle") {
+                    setupStar(o);
+                } else if (o.type == "line") {
+                    setupLine(o, false); // don't make neighbors known yet
+                }
+            });
+
+            // not all stars are set up at setupLine, so we need to make the neighbors known afterwards
+            canvas.getObjects("line").forEach(line => {
+                setupNeighbors(line);
+            });
+
+            canvas.getObjects("circle").forEach(star => {
+                // for some reason, x{1,2} and y{1,2} are not correctly serialized
+                // as a workaround, we update the line coordinates here
+                updateLines(star);
+            });
+
+            closePopup("canvas");
+            updateCounters();
+            canvas.renderAll();
+        }
+
+        gid("canvas-json-file-label").removeAttribute("aria-busy");
+
+        canvas.renderOnAddRemove = true;
+    }
+
     // popup canvas: button "New Canvas"
     gid("new-canvas-create").addEventListener("click", e => {
         e.preventDefault();
@@ -379,49 +424,10 @@
         clearCanvas(false);
     });
 
-    // popup canvas: button "Load Canvas"
-    // clear the canvas and load canvas data from a JSON string
-    gid("load-canvas-from-data").addEventListener("click", e => {
-        gid("load-canvas-from-data").setAttribute("aria-busy", true);
-
-        var data = gid("canvas-load-data").value;
-
-        _stars = new Map();
-        _lines = new Map();
-
-        canvas.renderOnAddRemove = false;
-
-        if (data != undefined && data != '') {
-            // third param is a function (j, o) that is called for each added object
-            // j is the json, o is the fabric.Object
-            // we use this for the additional setup for stars and lines
-            canvas.loadFromJSON(data, canvas.renderAll.bind(canvas), (j, o) => {
-                if (o.type == "circle") {
-                    setupStar(o);
-                } else if (o.type == "line") {
-                    setupLine(o, false); // don't make neighbors known yet
-                }
-            });
-
-            // not all stars are set up at setupLine, so we need to make the neighbors known afterwards
-            canvas.getObjects("line").forEach(line => {
-                setupNeighbors(line);
-            });
-
-            canvas.getObjects("circle").forEach(star => {
-                // for some reason, x{1,2} and y{1,2} are not correctly serialized
-                // as a workaround, we update the line coordinates here
-                updateLines(star);
-            });
-
-            canvas.renderAll();
-            gid("load-canvas-from-data").removeAttribute("aria-busy");
-            closePopup("canvas");
-            updateCounters();
-        }
-
-        canvas.renderOnAddRemove = true;
-    });
+    // load from while when file is selected
+    gid("canvas-json-file").onchange = () => {
+        loadFromFile(gid("canvas-json-file").files[0]);
+    };
 
     // helper function to trigger a download of a generated blob
     // by adding a link to the document  and clicking it
