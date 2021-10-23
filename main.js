@@ -838,6 +838,8 @@
         canvas.off("selection:created");
         canvas.off("before:selection:cleared");
         canvas.off("object:moving");
+        canvas.off("mouse:over");
+        canvas.off("mouse:out");
 
         _stars.forEach(star => {
             star.selectable = false;
@@ -1069,6 +1071,15 @@
                 line.selectable = true;
             });
 
+
+            // async (?) function renders the hover effects for objects
+            function frame() {
+                if (_mode == "delete") {
+                    fabric.util.requestAnimFrame(frame, canvas.getElement());
+                    canvas.requestRenderAll();
+                }
+            }
+
             canvas.on({
                 "selection:created": e => {
                     if (e.target) {
@@ -1078,10 +1089,22 @@
                             deleteLineEvent(e);
                         }
                     }
+                },
+                "mouse:over": e => {
+                    if (e.target) {
+                        e.target.set("backgroundColor", "#ff0000");
+                    }
+                },
+                "mouse:out": e => {
+                    if (e.target) {
+                        e.target.set("backgroundColor", null);
+                    }
                 }
             })
 
             canvas.requestRenderAll();
+
+            frame();
         }
     }
 
@@ -1354,6 +1377,7 @@
             radius: size,
             fill: fill,
             stroke: stroke,
+            padding: 5,
             includeDefaultValues: false, // less export when saving to JSON
         });
 
