@@ -139,7 +139,7 @@
 
         var field = gid("attribute-name");
         panelcfg.name.value = field.value;
-        panelcfg.name.disabled = field.getAttribute("disabled");
+        panelcfg.name.disabled = field.parentElement.classList.contains("invisible");
 
         field = gid("attribute-color1");
         panelcfg.color1.value = field.value;
@@ -1092,28 +1092,8 @@
 
     // setup and show attribute panel when a star was clicked in edit mode
     function onStarSelect(e) {
-        // TODO: why not lost _starAttributeCache here?
-        // all necessary values will be set by observe() anyway
-        var cfg = {
-            name: {
-                disabled: false
-            },
-            color1: {
-                disabled: false,
-                tooltip: "Inner Star Color"
-            },
-            color2: {
-                disabled: false,
-                tooltip: "Outer Star Color",
-            },
-            size: {
-                disabled: false,
-                min: STAR_MIN_SIZE,
-                max: STAR_MAX_SIZE
-            }
-        };
-
-        setupAttributePanel(cfg);
+        // load "default" attributes for stars, values will be overridden by observe()
+        setupAttributePanel(_starAttributeCache);
 
         observe(e.target, "attribute-name", "name")
         observe(e.target, "attribute-color1", "fill", () => {
@@ -1143,7 +1123,6 @@
     }
 
     // update a line start and end points (from the lines perspective)
-    // TODO: maybe put together with updateLines() ?
     function recalculateLinePoints(line) {
         var from = _stars.get(line.from).getCenterPoint();
         var to = _stars.get(line.to).getCenterPoint();
@@ -1157,29 +1136,8 @@
 
     // setup and show attribute panel when a line was clicked in edit mode
     function onLineSelect(e) {
-        // TODO: why not lost _lineAttributeCache here?
-        // all necessary values will be set by observe() anyway
-        var cfg = {
-            name: {
-                value: "disabled",
-                disabled: true
-            },
-            color1: {
-                disabled: true,
-                tooltip: "disabled",
-            },
-            color2: {
-                disabled: false,
-                tooltip: "Line Color"
-            },
-            size: {
-                disabled: false,
-                min: LINE_MIN_SIZE,
-                max: LINE_MAX_SIZE
-            }
-        };
-
-        setupAttributePanel(cfg);
+        // load "default" attributes for lines, values will be overridden by observe()
+        setupAttributePanel(_lineAttributeCache);
 
         observe(e.target, "attribute-color2", "stroke");
         observeInt(e.target, "attribute-size", "strokeWidth", () => {
@@ -1209,13 +1167,13 @@
         var star = e.target;
 
         // copy so that we can remove values while iterating
-        var lines_from_copy = star.lines_from.slice(0);
+        var lines_from_copy = new Set(star.lines_from);
         lines_from_copy.forEach(uuid => {
             deleteLine(uuid);
         });
 
         // copy so that we can remove values while iterating
-        var lines_to_copy = star.lines_to.slice(0);
+        var lines_to_copy = new Set(star.lines_to);
         lines_to_copy.forEach(uuid => {
             deleteLine(uuid);
         });
@@ -1255,12 +1213,10 @@
         var from = _stars.get(line.from);
         var to = _stars.get(line.to);
 
-        var idx = from.lines_from.indexOf(uuid);
-        from.lines_from.splice(idx, 1);
+        from.lines_from.delete(uuid);
         from.neighbors.delete(to.uuid);
 
-        idx = to.lines_to.indexOf(uuid);
-        to.lines_to.splice(idx, 1);
+        to.lines_to.delete(uuid);
         to.neighbors.delete(from.uuid);
 
         _lines.delete(line.uuid);
@@ -1351,11 +1307,15 @@
             return fabric.util.object.extend(toObject.call(this), {
               name: this.name,
               uuid: this.uuid,
-              lines_from: this.lines_from,
-              lines_to: this.lines_to
+              lines_from: [...this.lines_from], // must export Set as Array
+              lines_to: [...this.lines_to] // must export Set as Array
             });
           };
         })(star.toObject);
+
+        // convert Array to Set for stars loaded from JSON
+        star.lines_from = new Set(star.lines_from);
+        star.lines_to = new Set(star.lines_to);
 
         // keep track of neighbors, aka stars we have a line to; not exported to JSON
         star.neighbors = new Set();
@@ -1398,9 +1358,8 @@
         star.name = name;
         star.uuid = uuidv4();
 
-        // TODO: these could be Sets for faster delete? (need to check serialization)
-        star.lines_from = [];
-        star.lines_to = [];
+        star.lines_from = new Set();
+        star.lines_to = new Set();
 
         setupStar(star);
 
@@ -1470,8 +1429,8 @@
         line.to = to.uuid;
 
         // add uuid to respective stars
-        from.lines_from.push(line.uuid);
-        to.lines_to.push(line.uuid);
+        from.lines_from.add(line.uuid);
+        to.lines_to.add(line.uuid);
 
         setupLine(line, true);
 

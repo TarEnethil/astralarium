@@ -16,7 +16,7 @@ A small, work-in-progress, offline<sup>1</sup> editor for custom star maps and c
 * add text tool
 * optionally display star / constellation name
 * option to choose constellation starting point
-* pan / zoom on canvas
+* pan / zoom on canvas and react to resize events
 
 # References
 * CSS: [pico.css](https://picocss.com/)
