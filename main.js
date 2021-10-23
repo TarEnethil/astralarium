@@ -564,6 +564,14 @@
         canvas.renderAll();
     }
 
+    // popup info: Checkbox "Enable precise Selection"
+    gid("toggle-per-pixel").oninput = () => {
+        canvas.perPixelTargetFind = gid("toggle-per-pixel").checked;
+        // drop currently selected object
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+    }
+
     // find a suitable first star to begin a constellation
     function findConstellationStart() {
         // filter out all stars that already have neighbors
@@ -1231,12 +1239,14 @@
             var l = _lines.get(uuid);
             var t2 = l.strokeWidth / 2;
             l.set({ 'x1': c.x - t2, 'y1': c.y - t2 });
+            l.setCoords();
         });
 
         e.lines_to.forEach(uuid => {
             var l = _lines.get(uuid);
             var t2 = l.strokeWidth / 2;
             l.set({ 'x2': c.x - t2, 'y2': c.y - t2 });
+            l.setCoords();
         });
     }
 
@@ -1478,7 +1488,8 @@
         width: CANVAS_WIDTH,
         height: CANVAS_HEIGHT,
         backgroundColor: '#000000',
-        selection: false
+        selection: false,
+        perPixelTargetFind: gid("toggle-per-pixel").checked
     });
 
     // finally: open canvas popup
