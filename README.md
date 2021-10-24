@@ -12,11 +12,11 @@ A small, work-in-progress, offline<sup>1</sup> editor for custom star maps and c
 * improve performance for > 500 stars
 
 ### Maybe
-* constellation tracking
-* add text tool
-* optionally display star / constellation name
-* option to choose constellation starting point
-* pan / zoom on canvas and react to resize events
+* constellation: counting/tracking
+* star: display names
+* random: choose star as starting point for constellation
+* canvas: pan/zoom, react to resize events
+* text tool: fonts
 
 # References
 * CSS: [pico.css](https://picocss.com/)
