@@ -18,6 +18,8 @@
     var _stars = new Map();
     // global map of lines (uuid => fabric.Line)
     var _lines = new Map();
+    // gloap map of text elemeds (uuid => fabric.Text)
+    var _texts = new Map();
 
     // global current mode
     var _mode;
@@ -76,6 +78,30 @@
         }
     };
 
+    // stores the values of the attribute panel when leaving text mode
+    // contains default values for the first enterTextMode
+    var _textAttributeCache = {
+        // actual text
+        name: {
+            value: "Text",
+            disabled: false
+        },
+        color1: {
+            value: "#ffffff",
+            disabled: false,
+            tooltip: "Inner Color"
+        },
+        color2: {
+            value: "#ffffff",
+            disabled: false,
+            tooltip: "Border Color"
+        },
+        // size is controlled via the fabric Controls
+        size: {
+            disabled: true
+        }
+    };
+
     // set up hotkeys
     document.addEventListener('keyup', e => {
         if (e.key == 'n') {
@@ -94,6 +120,8 @@
             enterEditMode();
         } else if (e.key === 'l') {
             enterLineMode();
+        } else if (e.key === 't') {
+            enterTextMode();
         } else if (e.key === 'd') {
             enterDeleteMode();
         } else if (e.key === 'Escape') {
@@ -124,6 +152,7 @@
     setupModeListener("add", enterAddMode);
     setupModeListener("edit", enterEditMode);
     setupModeListener("line", enterLineMode);
+    setupModeListener("text", enterTextMode);
     setupModeListener("delete", enterDeleteMode);
 
     // returns the content of the attribute panel in a storable format
@@ -322,6 +351,7 @@
 
         _stars = new Map();
         _lines = new Map();
+        _texts = new Map();
         updateCounters();
     }
 
@@ -363,6 +393,7 @@
         if (data != undefined && data != '' && file.name.split(".").pop().toLowerCase() == "json") {
             _stars = new Map();
             _lines = new Map();
+            _texts = new Map();
 
             // third param is a function (j, o) that is called for each added object
             // j is the json, o is the fabric.Object
@@ -372,6 +403,8 @@
                     setupStar(o);
                 } else if (o.type == "line") {
                     setupLine(o, false); // don't make neighbors known yet
+                } else if (o.type == "text") {
+                    setupText(o);
                 }
             });
 
@@ -811,6 +844,7 @@
     function updateCounters() {
         gid("num-stars").innerHTML = _stars.size;
         gid("num-lines").innerHTML = _lines.size;
+        gid("num-texts").innerHTML = _texts.size;
     }
 
     // reset everything mode-related, to the next mode can start from a clean slate
@@ -825,11 +859,17 @@
             _lineAttributeCache = saveAttributePanel();
         }
 
+        // save current values of attribute panel, so it can be restored when reentering text mode
+        if (_mode == "text") {
+            _textAttributeCache = saveAttributePanel();
+        }
+
         _mode = null;
 
         gid("mode-star-add").classList.remove('active-mode');
         gid("mode-star-edit").classList.remove('active-mode');
         gid("mode-star-line").classList.remove('active-mode');
+        gid("mode-star-text").classList.remove('active-mode');
         gid("mode-star-delete").classList.remove('active-mode');
 
         // discard canvas seletion
@@ -841,11 +881,11 @@
         // reset all canvas listeners
         canvas.off("mouse:up");
         canvas.off("mouse:down");
+        canvas.off("mouse:over");
+        canvas.off("mouse:out");
         canvas.off("selection:created");
         canvas.off("before:selection:cleared");
         canvas.off("object:moving");
-        canvas.off("mouse:over");
-        canvas.off("mouse:out");
 
         _stars.forEach(star => {
             star.selectable = false;
@@ -854,8 +894,14 @@
         });
 
         _lines.forEach(line => {
-            line.evented = false;
             line.selectable = false;
+            line.evented = false;
+        });
+
+        _texts.forEach(text => {
+            text.selectable = false;
+            text.evented = true;
+            text.hasControls = false;
         });
     }
 
@@ -901,6 +947,11 @@
                 line.selectable = true;
             });
 
+            _texts.forEach(text => {
+                text.selectable = true;
+                text.hasControls = true;
+            });
+
             // save last move event for async rendering
             var lastMoveEvent;
 
@@ -921,6 +972,8 @@
                             onStarSelect(e);
                         } else if (e.target.type == "line") {
                             onLineSelect(e);
+                        } else if (e.target.type == "text") {
+                            onTextSelect(e);
                         }
                     }
                 },
@@ -933,6 +986,8 @@
                             onStarSelect(e);
                         } else if (e.target.type == "line") {
                             onLineSelect(e);
+                        } else if (e.target.type == "text") {
+                            onTextSelect(e);
                         }
                     }
                 },
@@ -943,6 +998,8 @@
                             onStarDeselect(e);
                         } else if (e.target.type == "line") {
                             onLineDeselect(e);
+                        } else if (e.target.type == "text") {
+                            onTextDeselect(e);
                         }
                     }
                 },
@@ -980,6 +1037,10 @@
             setupAttributePanel(_lineAttributeCache);
             gid("attribute-panel").style.visibility = "visible";
 
+            _texts.forEach(text => {
+                text.evented = false;
+            });
+
             canvas.on({
                 "mouse:down": e => {
                     var tmpLine; // stores the line that is drawn from the start to the cursor
@@ -987,7 +1048,7 @@
                     var mouse; // last known mouse position (for async rendering)
                     var startStar; // star which the temporary line is starting from
 
-                    if (e.target) {
+                    if (e.target && e.target.type == "circle") {
                         // if a star is clicked, create a temporary line that originates at the clicked
                         // star and runs to the mouse pointer
                         var center = e.target.getCenterPoint();
@@ -1031,7 +1092,7 @@
                             }
                         },
                         "mouse:up": e => {
-                            if (e.target && e.target != startStar && !starsAreConnected(e.target, startStar) && tmpLine) {
+                            if (e.target && e.target.type == "circle" && e.target != startStar && !starsAreConnected(e.target, startStar) && tmpLine) {
                                 // draw the real line if the mouse was released on another star, and the stars aren't connected yet
                                 var opts = {
                                     size: parseInt(gid("attribute-size").value, 10),
@@ -1062,6 +1123,69 @@
         }
     }
 
+    // textMode can be used to place text on the canvas.
+    // it also allows for editing the existing text fields, just like edit mode, because it feels intuitive that way.
+    // the default text and colors are controlled by the attribute panel
+    function enterTextMode() {
+        if (_mode != "text") {
+            resetMode();
+            setMode("text");
+
+            // load stored attributes from last text Mode (or default for first time)
+            setupAttributePanel(_textAttributeCache);
+            gid("attribute-panel").style.visibility = "visible";
+
+            _texts.forEach(text => {
+                text.selectable = true;
+                text.hasControls = true;
+            });
+
+            // two flags, needed so that mouse:up does not call makeText when / just after deselecting an existing text
+            var editing = false;
+            var just_deselected = false;
+
+            canvas.on({
+                "mouse:up": e => {
+                    if (!editing && !just_deselected) {
+                        makeTextFromEvent(e);
+                    }
+
+                    // it an existing text field was just deselected, load the attribute panel from the cache
+                    if (just_deselected) {
+                        just_deselected = false;
+                        setupAttributePanel(_textAttributeCache);
+                    }
+                },
+                "selection:created": e => {
+                    if (e.target && e.target.type == "text") {
+                        _textAttributeCache = saveAttributePanel();
+                        editing = true;
+                        onTextSelect(e);
+                    }
+                },
+                // :created is only called when nothing was previously selected
+                // this way, the attributePanels are set up correctly when directly
+                // switching from editing a star to a line (or vice versa)
+                "selection:updated": e => {
+                    if (e.target && e.target.type == "text") {
+                        editing = true;
+                        onTextSelect(e);
+                    }
+                },
+                // use before: so that we actually know which element the selection was cleared from
+                "before:selection:cleared": e => {
+                    if (e.target && e.target.type == "text") {
+                        onTextDeselect(e, true); // true means don't hide the panel, as it will display the default settings next
+                        editing = false;
+                        just_deselected = true;
+                    }
+                },
+            });
+
+            canvas.requestRenderAll();
+        }
+    }
+
     // deleteMode is used to delete stars and lines
     function enterDeleteMode() {
         if (_mode != "delete") {
@@ -1077,6 +1201,9 @@
                 line.selectable = true;
             });
 
+            _texts.forEach(text => {
+                text.selectable = true;
+            });
 
             // async (?) function renders the hover effects for objects
             function frame() {
@@ -1093,6 +1220,8 @@
                             deleteStarEvent(e);
                         } else if (e.target.type == "line") {
                             deleteLineEvent(e);
+                        } else if (e.target.type == "text") {
+                            deleteTextEvent(e);
                         }
                     }
                 },
@@ -1106,7 +1235,7 @@
                         e.target.set("backgroundColor", null);
                     }
                 }
-            })
+            });
 
             canvas.requestRenderAll();
 
@@ -1140,7 +1269,12 @@
             }
         });
         observe(e.target, "attribute-color2", "stroke");
-        observeInt(e.target, "attribute-size", "radius", () => {
+        observeInt(e.target, "attribute-size", "radius", (oldVal) => {
+            // move center so that the circle expands "outwards" instead of "down right"
+            var diff = e.target.radius - oldVal;
+            e.target.left = e.target.left - diff;
+            e.target.top = e.target.top - diff;
+
             // recalculate line centers when changing size
             updateLines(e.target);
             updateAttributeSizeTooltip();
@@ -1192,6 +1326,36 @@
         gid("attribute-panel").style.visibility = "hidden";
         unobserve("attribute-color2");
         unobserve("attribute-size");
+    }
+
+    // set up the attribute panel to edit the attribute of text fields in edit mode
+    function onTextSelect(e) {
+        // load "default" attributes for lines, values will be overridden by observe()
+        setupAttributePanel(_textAttributeCache);
+
+        observe(e.target, "attribute-name", "text");
+        observe(e.target, "attribute-color1", "fill");
+        observe(e.target, "attribute-color2", "stroke");
+
+        gid("attribute-panel").style.visibility = "visible";
+    }
+
+    // hide the attribute panel when a text field was deselected in edit mode
+    // if dontHide is true, don't hide the attribute panel
+    function onTextDeselect(e, dontHide) {
+        if (!dontHide) {
+            gid("attribute-panel").style.visibility = "hidden";
+        }
+
+        unobserve("attribute-name");
+        unobserve("attribute-color1");
+        unobserve("attribute-color2");
+
+        // delete text field if it is empty after editing
+        if (e.target.text == "") {
+            deleteTextEvent(e);
+            canvas.requestRenderAll();
+        }
     }
 
     // update the coordinates of all lines originating or running to this star
@@ -1279,11 +1443,19 @@
         });
     }
 
+    // delete a clicked line
+    function deleteTextEvent(e) {
+        _texts.delete(e.target.uuid);
+        canvas.remove(e.target);
+
+        updateCounters();
+    }
+
     // observe an input field and tie it to a property of a fabric.Object
     // if set, func will be executed after the element property is set
     function observe(elem, id, property, func) {
         // get the input field
-        var el = document.getElementById(id);
+        var el = gid(id);
 
         // set the initial value of the input field to the element property
         el.value = elem[property];
@@ -1302,21 +1474,23 @@
     }
 
     // observe an input field and tie it to a property of a fabric.Object, while casting the value to Int
-    // if set, func will be executed after the element property is set
+    // if set, func will be executed after the element property is set, with the oldVal as a parameter
     function observeInt(elem, id, property, func) {
         // get the input field
-        var el = document.getElementById(id);
+        var el = gid(id);
 
         // set the initial value of the input field to the element property
         el.value = elem[property];
 
         // set the element property if the input field is changed
         el.oninput = function() {
+            var oldVal = elem.get(property);
+
             elem.set(property, parseInt(this.value, 10));
             elem.setCoords();
 
             if (func) {
-                func();
+                func(oldVal);
             }
 
             canvas.renderAll();
@@ -1325,9 +1499,10 @@
 
     // remove the oninput function from an input field
     function unobserve(id) {
-        document.getElementById(id).oninput = function(){};
+        gid(id).oninput = function(){};
     }
 
+    // return true if two stars have a line between them
     function starsAreConnected(s1, s2) {
         return s1.neighbors.has(s2.uuid);
     }
@@ -1479,6 +1654,61 @@
         return line;
     }
 
+    // set up the text attributes
+    // this function is called for each new text field, as well as text fields loaded from JSON
+    function setupText(text) {
+        // start with selectable = true because we allow editing in text mode too
+        text.selectable = true;
+        text.hasControls = true;
+
+        // hide the non-edge controls, so that font can only be grown/shrunk proportionally
+        text.setControlVisible("ml", false);
+        text.setControlVisible("mt", false);
+        text.setControlVisible("mr", false);
+        text.setControlVisible("mb", false);
+
+        // add uuid to JSON export
+        text.toObject = (function(toObject) {
+          return function() {
+            return fabric.util.object.extend(toObject.call(this), {
+              uuid: this.uuid,
+            });
+          };
+        })(text.toObject);
+
+        // add to global map
+        _texts.set(text.uuid, text);
+    }
+
+    // make and return a text field
+    // only called for new text fields
+    function makeText(left, top, opts) {
+        var text = gid("attribute-name").value;
+        if (!text || text == "") {
+            text = "Text";
+        }
+
+        var fill = ("fill" in opts ? opts.fill : "#ffffff");
+        var stroke = ("stroke" in opts ? opts.stroke : "#ffffff");
+
+        var text = new fabric.Text(text, {
+            left: left,
+            top: top,
+            fill: fill,
+            stroke: stroke,
+            strokeWidth: 1,
+            includeDefaultValues: false
+        });
+
+        text.uuid = uuidv4();
+
+        setupText(text);
+
+        updateCounters();
+
+        return text;
+    }
+
     // return a randomly generated star, according to the settings in the canvas popup
     function makeRandomStar() {
         var min = parseInt(gid("new-min-size").value, 10);
@@ -1496,7 +1726,7 @@
         return makeStar(rando(PADDING, CANVAS_WIDTH-PADDING), rando(PADDING, CANVAS_HEIGHT-PADDING), opts);
     }
 
-    // make and return a star at the position of a click event
+    // create a star at the position of a click event
     function makeStarFromEvent(e) {
         if (e.target == null || e.target == undefined) {
             var opts = {
@@ -1510,6 +1740,21 @@
             var y = e.absolutePointer.y - opts.size - 1;
 
             canvas.add(makeStar(x, y, opts));
+        }
+    }
+
+    // create a text element at the position of a click event
+    function makeTextFromEvent(e) {
+        if (e.target == null || e.target == undefined) {
+            var opts = {
+                fill: gid("attribute-color1").value,
+                stroke: gid("attribute-color2").value,
+            };
+
+            var x = e.absolutePointer.x;
+            var y = e.absolutePointer.y;
+
+            canvas.add(makeText(x, y, opts));
         }
     }
 
