@@ -3,15 +3,30 @@
 </p>
 
 # Astralarium
-A small, work-in-progress, offline<sup>1</sup> editor for custom star maps and constellations.
-
+A small, 99% offline<sup>1</sup> editor for custom star maps and constellations.
+Made because I couldn't find a suitable tool anywhere.
+Check it out [here](https://tarenethil.github.io/astralarium/) (press `h` to display hotkeys).
 
 <sup>1</sup>: An internet connection is needed if you want to load a background image.
 
-## TODO
+# Features
+* Stars can be placed manually or randomly
+* Stars are customizable (size, inner color, border color and name (currently unused))
+* Lines can be drawn between stars manually or randomly (via a terribly simple random constellation generator)
+* The background can be a blend of a color and an image (custom URL or premade)
+* Text can be placed on the Canvas (customizable color and size)
+* Export a map to SVG or PNG
+* Experimental: Save/Load a map to/from a JSON file
+* Experimental: 'Star shadows' (glow)
+
+# Tips
+* Performance (FPS) might decrease drastically with more stars. Using a smaller number of bigger stars in conjunction with a background image containing small stars is recommended.
+* Enabling "precise selection" (`h`) might help with selecting stars within line boxes.
+
+# TODO
 * improve performance for > 500 stars
 
-### Maybe
+## Maybe
 * constellation: counting/tracking
 * star: display names
 * random: choose star as starting point for constellation
