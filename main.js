@@ -1006,6 +1006,10 @@
                 "mouse:up": e => {
                     // delete lastMoveEvent when the mouse is released,
                     // which stops frame from calling requestAnimFrame()
+                    if (lastMoveEvent) {
+                        onStarMove(lastMoveEvent);
+                        canvas.requestRenderAll();
+                    }
                     lastMoveEvent = null;
                 },
                 "object:moving": e => {

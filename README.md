@@ -22,12 +22,15 @@ Check it out [here](https://tarenethil.github.io/astralarium/) (press `h` to dis
 # Tips
 * Performance (FPS) might decrease drastically with more stars. Using a smaller number of bigger stars in conjunction with a background image containing small stars is recommended.
 * Enabling "precise selection" (`h`) might help with selecting stars within line boxes.
+* For me, performance in Chromium was better than in Firefox.
 
 # TODO
 * improve performance for > 500 stars
 
 ## Maybe
 * better UI scaling?
+* file-select for local background image
+* prevent accidental reload / page leaving
 * constellation: counting/tracking
 * star: display names
 * random: choose star as starting point for constellation
