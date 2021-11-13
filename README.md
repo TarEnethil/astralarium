@@ -27,6 +27,7 @@ Check it out [here](https://tarenethil.github.io/astralarium/) (press `h` to dis
 * improve performance for > 500 stars
 
 ## Maybe
+* better UI scaling?
 * constellation: counting/tracking
 * star: display names
 * random: choose star as starting point for constellation
