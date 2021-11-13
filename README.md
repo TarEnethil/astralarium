@@ -9,6 +9,9 @@ Check it out [here](https://tarenethil.github.io/astralarium/) (press `h` to dis
 
 <sup>1</sup>: An internet connection is needed if you want to load a background image.
 
+# Example
+<img src="example.jpg" alt="Astralarium Example" />
+
 # Features
 * Stars can be placed manually or randomly
 * Stars are customizable (size, inner color, border color and name (currently unused))
